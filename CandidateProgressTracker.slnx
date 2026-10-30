@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/CandidateProgressTracker.Application/CandidateProgressTracker.Application.csproj" />
+    <Project Path="src/CandidateProgressTracker.Domain/CandidateProgressTracker.Domain.csproj" />
+    <Project Path="src/CandidateProgressTracker.Infrastructure/CandidateProgressTracker.Infrastructure.csproj" />
     <Project Path="src/CandidateProgressTracker.Web/CandidateProgressTracker.Web.csproj" />
   </Folder>
 </Solution>
