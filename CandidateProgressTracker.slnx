@@ -5,4 +5,7 @@
     <Project Path="src/CandidateProgressTracker.Infrastructure/CandidateProgressTracker.Infrastructure.csproj" />
     <Project Path="src/CandidateProgressTracker.Web/CandidateProgressTracker.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CandidateProgressTracker.IntegrationTests/CandidateProgressTracker.IntegrationTests.csproj" />
+  </Folder>
 </Solution>
