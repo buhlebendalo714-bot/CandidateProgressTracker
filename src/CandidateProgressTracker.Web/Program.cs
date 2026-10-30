@@ -24,7 +24,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdministratorOnly", policy =>
+        policy.RequireRole("Administrator"));
+});
+
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeFolder("/Admin", "AdministratorOnly");
+});
 
 var app = builder.Build();
 
