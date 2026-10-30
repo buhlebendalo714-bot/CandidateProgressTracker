@@ -1,0 +1,43 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "User accounts";
+}
+
+<h1>User accounts</h1>
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<p>
+    <a asp-page="./Create" class="btn btn-primary">Create account</a>
+</p>
+<p>Showing up to 50 accounts, ordered by username.</p>
+
+@if (Model.Accounts.Count == 0)
+{
+    <p>No accounts were found.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Roles</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var account in Model.Accounts)
+                {
+                    <tr>
+                        <td>@account.UserName</td>
+                        <td>@account.Roles</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
