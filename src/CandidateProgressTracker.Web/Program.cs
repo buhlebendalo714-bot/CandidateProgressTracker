@@ -1,3 +1,5 @@
+using CandidateProgressTracker.Application.Accounts;
+using CandidateProgressTracker.Infrastructure.Identity;
 using CandidateProgressTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -34,6 +36,10 @@ builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/Admin", "AdministratorOnly");
 });
+
+builder.Services.AddScoped<IAccountQueryService, AccountQueryService>();
+
+builder.Services.AddScoped<IAccountCreationService, AccountCreationService>();
 
 var app = builder.Build();
 

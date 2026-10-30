@@ -1,39 +1,22 @@
-using Microsoft.AspNetCore.Identity;
+using CandidateProgressTracker.Application.Accounts;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace CandidateProgressTracker.Web.Pages.Admin.Users;
 
 public class IndexModel : PageModel
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly IAccountQueryService _accountQueryService;
 
-    public IndexModel(UserManager<IdentityUser> userManager)
+    public IndexModel(IAccountQueryService accountQueryService)
     {
-        _userManager = userManager;
+        _accountQueryService = accountQueryService;
     }
 
-    public List<AccountRow> Accounts { get; private set; } = [];
+    public IReadOnlyList<AccountSummary> Accounts { get; private set; }
+        = Array.Empty<AccountSummary>();
 
     public async Task OnGetAsync()
     {
-        var users = await _userManager.Users
-            .AsNoTracking()
-            .OrderBy(user => user.UserName)
-            .Take(50)
-            .ToListAsync();
-
-        foreach (var user in users)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-
-            Accounts.Add(new AccountRow(
-                user.UserName ?? "(No username)",
-                roles.Count > 0
-                    ? string.Join(", ", roles.OrderBy(role => role))
-                    : "No roles assigned"));
-        }
+        Accounts = await _accountQueryService.GetAccountsAsync();
     }
-
-    public record AccountRow(string UserName, string Roles);
 }

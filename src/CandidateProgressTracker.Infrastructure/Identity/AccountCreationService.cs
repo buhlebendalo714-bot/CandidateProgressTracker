@@ -1,0 +1,88 @@
+using CandidateProgressTracker.Application.Accounts;
+using CandidateProgressTracker.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
+
+namespace CandidateProgressTracker.Infrastructure.Identity;
+
+public class AccountCreationService : IAccountCreationService
+{
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly TrackerDbContext _db;
+
+    public AccountCreationService(
+        UserManager<IdentityUser> userManager,
+        TrackerDbContext db)
+    {
+        _userManager = userManager;
+        _db = db;
+    }
+
+    public async Task<AccountCreationResult> CreateAsync(
+        string userName,
+        string password,
+        string role)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(userName) || userName.Length > 256)
+        {
+            errors.Add("Enter a username of up to 256 characters.");
+        }
+
+        if (string.IsNullOrEmpty(password) ||
+            password.Length < 12 ||
+            password.Length > 128)
+        {
+            errors.Add("The password must contain 12 to 128 characters.");
+        }
+
+        if (role != "Candidate" && role != "Mentor")
+        {
+            errors.Add("Select Candidate or Mentor.");
+        }
+
+        if (errors.Count > 0)
+        {
+            return new AccountCreationResult(false, errors);
+        }
+
+        var user = new IdentityUser
+        {
+            UserName = userName.Trim(),
+            LockoutEnabled = true
+        };
+
+        await using var transaction =
+            await _db.Database.BeginTransactionAsync();
+
+        var createResult =
+            await _userManager.CreateAsync(user, password);
+
+        if (!createResult.Succeeded)
+        {
+            return new AccountCreationResult(
+                false,
+                createResult.Errors
+                    .Select(error => error.Description)
+                    .ToArray());
+        }
+
+        var roleResult =
+            await _userManager.AddToRoleAsync(user, role);
+
+        if (!roleResult.Succeeded)
+        {
+            return new AccountCreationResult(
+                false,
+                roleResult.Errors
+                    .Select(error => error.Description)
+                    .ToArray());
+        }
+
+        await transaction.CommitAsync();
+
+        return new AccountCreationResult(
+            true,
+            Array.Empty<string>());
+    }
+}

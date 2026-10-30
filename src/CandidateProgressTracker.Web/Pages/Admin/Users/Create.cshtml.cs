@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using CandidateProgressTracker.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
+using CandidateProgressTracker.Application.Accounts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -8,15 +7,11 @@ namespace CandidateProgressTracker.Web.Pages.Admin.Users;
 
 public class CreateModel : PageModel
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly TrackerDbContext _db;
+    private readonly IAccountCreationService _accountCreationService;
 
-    public CreateModel(
-        UserManager<IdentityUser> userManager,
-        TrackerDbContext db)
+    public CreateModel(IAccountCreationService accountCreationService)
     {
-        _userManager = userManager;
-        _db = db;
+        _accountCreationService = accountCreationService;
     }
 
     [BindProperty]
@@ -52,56 +47,25 @@ public class CreateModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        // Validate on the server, even if someone alters the dropdown.
-        if (Input.Role != "Candidate" && Input.Role != "Mentor")
-        {
-            ModelState.AddModelError(
-                "Input.Role",
-                "Select Candidate or Mentor.");
-        }
-
         if (!ModelState.IsValid)
         {
             return Page();
         }
 
-        var user = new IdentityUser
+        var result = await _accountCreationService.CreateAsync(
+            Input.UserName,
+            Input.Password,
+            Input.Role);
+
+        if (!result.Succeeded)
         {
-            UserName = Input.UserName.Trim(),
-            LockoutEnabled = true
-        };
-
-        // Save both the account and its role, or neither.
-        await using var transaction =
-            await _db.Database.BeginTransactionAsync();
-
-        var createResult =
-            await _userManager.CreateAsync(user, Input.Password);
-
-        if (!createResult.Succeeded)
-        {
-            foreach (var error in createResult.Errors)
+            foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(string.Empty, error);
             }
 
             return Page();
         }
-
-        var roleResult =
-            await _userManager.AddToRoleAsync(user, Input.Role);
-
-        if (!roleResult.Succeeded)
-        {
-            foreach (var error in roleResult.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-
-            return Page();
-        }
-
-        await transaction.CommitAsync();
 
         TempData["SuccessMessage"] = "User account created successfully.";
         return RedirectToPage("./Index");
