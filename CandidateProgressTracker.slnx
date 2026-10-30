@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CandidateProgressTracker.Web/CandidateProgressTracker.Web.csproj" />
+  </Folder>
+</Solution>
