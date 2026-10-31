@@ -90,6 +90,17 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("EndedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTimeOffset?>("EndsAt")
                         .HasColumnType("datetimeoffset(7)");
 
@@ -113,6 +124,8 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasKey("MembershipId");
 
                     b.HasIndex("CreatedBy");
+
+                    b.HasIndex("EndedBy");
 
                     b.HasIndex("UserId");
 
@@ -348,6 +361,11 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("EndedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()

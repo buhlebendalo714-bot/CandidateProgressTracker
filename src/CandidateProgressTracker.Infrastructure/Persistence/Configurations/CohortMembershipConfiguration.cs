@@ -73,5 +73,19 @@ public class CohortMembershipConfiguration
         })
             .IsUnique()
             .HasFilter("[EndsAt] IS NULL");
+
+        builder.Property(membership => membership.EndedBy)
+            .HasMaxLength(450);
+
+        builder.Property(membership => membership.EndReason)
+            .HasMaxLength(1000);
+
+        builder.Property(membership => membership.EndedAt)
+            .HasColumnType("datetimeoffset(7)");
+
+        builder.HasOne<IdentityUser>()
+            .WithMany()
+            .HasForeignKey(membership => membership.EndedBy)
+            .OnDelete(DeleteBehavior.Restrict);  
     }
 }

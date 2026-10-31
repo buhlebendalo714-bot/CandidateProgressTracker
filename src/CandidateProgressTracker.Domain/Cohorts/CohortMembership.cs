@@ -14,6 +14,12 @@ public class CohortMembership
 
     public DateTimeOffset? EndsAt { get; set; }
 
+    public string? EndedBy { get; set; }
+
+    public string? EndReason { get; set; }
+
+    public DateTimeOffset? EndedAt { get; set; }
+
     public string ChangeReason { get; set; } = string.Empty;
 
     public string CreatedBy { get; set; } = string.Empty;
