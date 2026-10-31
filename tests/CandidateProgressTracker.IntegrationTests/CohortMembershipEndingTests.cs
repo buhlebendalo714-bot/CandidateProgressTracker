@@ -300,4 +300,90 @@ public class CohortMembershipEndingTests
         Assert.Equal(ended.EndedBy, saved.EndedBy);
         Assert.True(saved.RowVersion.SequenceEqual(ended.RowVersion));
     }
+
+    [Fact]
+    public async Task Reassignment_creates_new_membership_and_preserves_history()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var scenario = await ArrangeAsync(database);
+
+        var endingResult = await EndAsync(
+            database,
+            scenario,
+            "Initial participation completed",
+            scenario.Original.RowVersion,
+            scenario.AdminId);
+
+        Assert.True(
+            endingResult.Succeeded,
+            string.Join("; ", endingResult.Errors));
+
+        var ended = await ReadAsync(database);
+
+        MembershipResult reassignment;
+
+        await using (var scope = database.Services.CreateAsyncScope())
+        {
+            var service = scope.ServiceProvider
+                .GetRequiredService<ICohortMembershipService>();
+
+            reassignment = await service.AssignAsync(
+                ended.CohortId,
+                ended.UserId,
+                ended.MembershipKind,
+                "Rejoined cohort for additional training",
+                scenario.AdminId);
+        }
+
+        Assert.True(
+            reassignment.Succeeded,
+            string.Join("; ", reassignment.Errors));
+
+        Assert.NotNull(reassignment.MembershipId);
+        Assert.NotEqual(ended.MembershipId, reassignment.MembershipId!.Value);
+
+        await using var verificationScope =
+            database.Services.CreateAsyncScope();
+
+        var db = verificationScope.ServiceProvider
+            .GetRequiredService<TrackerDbContext>();
+
+        var records = await db.CohortMemberships
+            .AsNoTracking()
+            .Where(item =>
+                item.CohortId == ended.CohortId &&
+                item.UserId == ended.UserId &&
+                item.MembershipKind == ended.MembershipKind)
+            .ToListAsync();
+
+        Assert.Equal(2, records.Count);
+
+        var historical = Assert.Single(
+            records,
+            item => item.MembershipId == ended.MembershipId);
+
+        Assert.Equal(ended.StartsAt, historical.StartsAt);
+        Assert.Equal(ended.EndsAt, historical.EndsAt);
+        Assert.Equal(ended.CreatedBy, historical.CreatedBy);
+        Assert.Equal(ended.ChangeReason, historical.ChangeReason);
+        Assert.Equal(ended.EndedBy, historical.EndedBy);
+        Assert.Equal(ended.EndedAt, historical.EndedAt);
+        Assert.Equal(ended.EndReason, historical.EndReason);
+        Assert.True(ended.RowVersion.SequenceEqual(historical.RowVersion));
+
+        var active = Assert.Single(
+            records,
+            item => item.EndsAt == null);
+
+        Assert.Equal(reassignment.MembershipId!.Value, active.MembershipId);
+        Assert.True(active.StartsAt >= ended.EndsAt!.Value);
+        Assert.Equal(scenario.AdminId, active.CreatedBy);
+        Assert.Equal(
+            "Rejoined cohort for additional training",
+            active.ChangeReason);
+
+        Assert.Null(active.EndedBy);
+        Assert.Null(active.EndedAt);
+        Assert.Null(active.EndReason);
+    }
 }
