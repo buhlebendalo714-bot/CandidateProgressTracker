@@ -13,7 +13,10 @@ public record CohortDetails(
     string Code,
     string? LocationLabel,
     bool IsArchived,
-    byte[] RowVersion);
+    byte[] RowVersion,
+    DateTimeOffset? ArchivedAt,
+    string? ArchivedByUserName,
+    string? ArchiveReason);
 
 public interface ICohortQueryService
 {

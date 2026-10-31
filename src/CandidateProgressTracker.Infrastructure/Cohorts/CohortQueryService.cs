@@ -31,16 +31,22 @@ public class CohortQueryService : ICohortQueryService
 
     public async Task<CohortDetails?> GetAsync(Guid cohortId)
     {
-        return await _db.Cohorts
-            .AsNoTracking()
-            .Where(cohort => cohort.CohortId == cohortId)
-            .Select(cohort => new CohortDetails(
+        return await (
+            from cohort in _db.Cohorts.AsNoTracking()
+            join user in _db.Users.AsNoTracking()
+                on cohort.ArchivedBy equals user.Id into archiveUsers
+            from archiveUser in archiveUsers.DefaultIfEmpty()
+            where cohort.CohortId == cohortId
+            select new CohortDetails(
                 cohort.CohortId,
                 cohort.Name,
                 cohort.Code,
                 cohort.LocationLabel,
                 cohort.IsArchived,
-                cohort.RowVersion))
+                cohort.RowVersion,
+                cohort.ArchivedAt,
+                archiveUser == null ? null : archiveUser.UserName,
+                cohort.ArchiveReason))
             .SingleOrDefaultAsync();
-    }
+    }   
 }

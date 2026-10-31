@@ -49,15 +49,12 @@ else
                                 @(cohort.IsArchived ? "View members" : "Manage members")
                             </a>
 
-                            @if (!cohort.IsArchived)
-                            {
-                                <span class="mx-2">|</span>
+                            <span class="mx-2">|</span>
 
-                                <a asp-page="./Archive"
-                                asp-route-id="@cohort.CohortId">
-                                    Archive
-                                </a>
-                            }
+                            <a asp-page="./Archive"
+                            asp-route-id="@cohort.CohortId">
+                                @(cohort.IsArchived ? "View archive details" : "Archive")
+                            </a>
                         </td>
                     </tr>
                 }

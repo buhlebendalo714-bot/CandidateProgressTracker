@@ -1,8 +1,12 @@
 @page "{id:guid}"
 @model CandidateProgressTracker.Web.Pages.Admin.Cohorts.ArchiveModel
 @{
-    ViewData["Title"] = "Archive cohort";
+    ViewData["Title"] = Model.Cohort.IsArchived
+        ? "Cohort archive details"
+        : "Archive cohort";
 }
+
+<h1>@ViewData["Title"]</h1>
 
 <h1>Archive cohort</h1>
 
@@ -26,8 +30,32 @@
 @if (Model.Cohort.IsArchived)
 {
     <div class="alert alert-info">
-        This cohort is already archived.
+        This cohort is archived. Existing memberships and their
+        history have been retained.
     </div>
+
+    <dl class="row">
+        <dt class="col-sm-3">Archived at (UTC)</dt>
+        <dd class="col-sm-9">
+            @(Model.Cohort.ArchivedAt?.UtcDateTime
+                .ToString("yyyy-MM-dd HH:mm:ss") ?? "Not recorded")
+        </dd>
+
+        <dt class="col-sm-3">Archived by</dt>
+        <dd class="col-sm-9">
+            @(Model.Cohort.ArchivedByUserName ?? "Not recorded")
+        </dd>
+
+        <dt class="col-sm-3">Archive reason</dt>
+        <dd class="col-sm-9"
+            style="white-space: pre-wrap; overflow-wrap: anywhere;">@(Model.Cohort.ArchiveReason ?? "Not recorded")</dd>
+    </dl>
+
+    <a asp-page="./Members"
+       asp-route-id="@Model.Cohort.CohortId"
+       class="btn btn-primary">
+        View members
+    </a>
 
     <a asp-page="./Index" class="btn btn-secondary">
         Back to cohorts
