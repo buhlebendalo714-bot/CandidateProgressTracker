@@ -47,6 +47,10 @@ internal sealed class TestDatabase : IAsyncDisposable
             ICohortCreationService, 
             CohortCreationService>();
 
+        services.AddScoped<
+            ICohortMembershipService, 
+            CohortMembershipService>();
+
         var database = new TestDatabase(
             services.BuildServiceProvider(
                 new ServiceProviderOptions

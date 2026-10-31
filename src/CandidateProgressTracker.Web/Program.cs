@@ -47,6 +47,8 @@ builder.Services.AddScoped<ICohortCreationService, CohortCreationService>();
 
 builder.Services.AddScoped<ICohortQueryService, CohortQueryService>();
 
+builder.Services.AddScoped<ICohortMembershipService, CohortMembershipService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
