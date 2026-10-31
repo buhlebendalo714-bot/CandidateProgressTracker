@@ -1,3 +1,5 @@
+using CandidateProgressTracker.Application.Cohorts;
+using CandidateProgressTracker.Infrastructure.Cohorts;
 using CandidateProgressTracker.Application.Accounts;
 using CandidateProgressTracker.Infrastructure.Identity;
 using CandidateProgressTracker.Infrastructure.Persistence;
@@ -41,6 +43,10 @@ internal sealed class TestDatabase : IAsyncDisposable
             IAccountCreationService,
             AccountCreationService>();
 
+        services.AddScoped<
+            ICohortCreationService, 
+            CohortCreationService>();
+
         var database = new TestDatabase(
             services.BuildServiceProvider(
                 new ServiceProviderOptions
@@ -62,7 +68,7 @@ internal sealed class TestDatabase : IAsyncDisposable
             var roleManager = scope.ServiceProvider
                 .GetRequiredService<RoleManager<IdentityRole>>();
 
-            foreach (var role in new[] { "Candidate", "Mentor" })
+            foreach (var role in new[] { "Administrator", "Candidate", "Mentor" })
             {
                 var result =
                     await roleManager.CreateAsync(new IdentityRole(role));
