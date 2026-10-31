@@ -37,7 +37,8 @@ public class CohortMembershipQueryService : ICohortMembershipQueryService
                 user.UserName ?? "(No username)",
                 membership.MembershipKind,
                 membership.StartsAt,
-                membership.EndsAt))
+                membership.EndsAt,
+                membership.RowVersion))
             .ToListAsync();
 
         var eligibleMembers = new List<EligibleMember>();

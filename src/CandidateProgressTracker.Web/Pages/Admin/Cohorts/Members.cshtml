@@ -100,6 +100,7 @@ else
                     <th scope="col">Starts (UTC)</th>
                     <th scope="col">Ends (UTC)</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -124,6 +125,18 @@ else
                                 : "Open-ended")
                         </td>
                         <td>@status</td>
+                        <td>
+                            @if (!Model.Details.IsArchived
+                                && membership.EndsAt is null
+                                && membership.StartsAt < now)
+                            {
+                                <a asp-page="./EndMembership"
+                                asp-route-cohortId="@Model.Details.CohortId"
+                                asp-route-membershipId="@membership.MembershipId">
+                                    End membership
+                                </a>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

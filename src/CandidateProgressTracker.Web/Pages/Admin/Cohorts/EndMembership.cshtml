@@ -1,0 +1,82 @@
+@page "{cohortId:guid}/{membershipId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.EndMembershipModel
+@{
+    ViewData["Title"] = "End membership";
+}
+
+<h1>End membership</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Cohort</dt>
+    <dd class="col-sm-9">@Model.Details.Name (@Model.Details.Code)</dd>
+
+    <dt class="col-sm-3">Member</dt>
+    <dd class="col-sm-9">@Model.Membership.UserName</dd>
+
+    <dt class="col-sm-3">Role in cohort</dt>
+    <dd class="col-sm-9">@Model.Membership.Kind</dd>
+</dl>
+
+<div asp-validation-summary="All"
+     class="text-danger" role="alert"></div>
+
+@if (Model.CanSubmit)
+{
+    <p>
+        This will end the membership immediately.
+        The previous membership record will remain in its history.
+        The user's account and global role will remain unchanged.
+    </p>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form method="post"
+                  asp-route-cohortId="@Model.Details.CohortId"
+                  asp-route-membershipId="@Model.Membership.MembershipId">
+
+                <input type="hidden" asp-for="Input.RowVersion" />
+
+                <div class="mb-3">
+                    <label asp-for="Input.Reason" class="form-label"></label>
+                    <textarea asp-for="Input.Reason"
+                              class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Input.Reason"
+                          class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-danger">
+                    Confirm end membership
+                </button>
+
+                <a asp-page="./Members"
+                   asp-route-id="@Model.Details.CohortId"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <p>
+        Ending is unavailable or this page needs to be reloaded
+        after a failed submission.
+    </p>
+
+    <a asp-page="./EndMembership"
+       asp-route-cohortId="@Model.Details.CohortId"
+       asp-route-membershipId="@Model.Membership.MembershipId"
+       class="btn btn-outline-secondary">
+        Reload details
+    </a>
+
+    <a asp-page="./Members"
+       asp-route-id="@Model.Details.CohortId">
+        Back to members
+    </a>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
