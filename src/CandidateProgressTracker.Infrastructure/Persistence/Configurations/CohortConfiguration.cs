@@ -30,6 +30,20 @@ public class CohortConfiguration : IEntityTypeConfiguration<Cohort>
         builder.Property(cohort => cohort.IsArchived)
             .HasDefaultValue(false);
 
+        builder.Property(cohort => cohort.ArchivedAt)
+            .HasColumnType("datetimeoffset(7)");
+
+        builder.Property(cohort => cohort.ArchivedBy)
+            .HasMaxLength(450);
+
+        builder.Property(cohort => cohort.ArchiveReason)
+            .HasMaxLength(1000);
+
+        builder.HasOne<IdentityUser>()
+            .WithMany()
+            .HasForeignKey(cohort => cohort.ArchivedBy)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(cohort => cohort.CreatedAt)
             .HasColumnType("datetimeoffset(7)")
             .IsRequired();

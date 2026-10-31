@@ -28,6 +28,17 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ArchiveReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("ArchivedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -62,6 +73,8 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .HasColumnType("rowversion");
 
                     b.HasKey("CohortId");
+
+                    b.HasIndex("ArchivedBy");
 
                     b.HasIndex("Code")
                         .IsUnique();
@@ -341,6 +354,11 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.Cohort", b =>
                 {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("CreatedBy")

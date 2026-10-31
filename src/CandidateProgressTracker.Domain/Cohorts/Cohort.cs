@@ -12,6 +12,12 @@ public class Cohort
 
     public bool IsArchived { get; set; }
 
+    public DateTimeOffset? ArchivedAt { get; set; }
+
+    public string? ArchivedBy { get; set; }
+
+    public string? ArchiveReason { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public string CreatedBy { get; set; } = string.Empty;
