@@ -28,4 +28,19 @@ public class CohortQueryService : ICohortQueryService
                 cohort.IsArchived))
             .ToListAsync();
     }
+
+    public async Task<CohortDetails?> GetAsync(Guid cohortId)
+    {
+        return await _db.Cohorts
+            .AsNoTracking()
+            .Where(cohort => cohort.CohortId == cohortId)
+            .Select(cohort => new CohortDetails(
+                cohort.CohortId,
+                cohort.Name,
+                cohort.Code,
+                cohort.LocationLabel,
+                cohort.IsArchived,
+                cohort.RowVersion))
+            .SingleOrDefaultAsync();
+    }
 }

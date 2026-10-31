@@ -7,7 +7,17 @@ public record CohortSummary(
     string? LocationLabel,
     bool IsArchived);
 
+public record CohortDetails(
+    Guid CohortId,
+    string Name,
+    string Code,
+    string? LocationLabel,
+    bool IsArchived,
+    byte[] RowVersion);
+
 public interface ICohortQueryService
 {
     Task<IReadOnlyList<CohortSummary>> GetCohortsAsync();
+
+    Task<CohortDetails?> GetAsync(Guid cohortId);
 }

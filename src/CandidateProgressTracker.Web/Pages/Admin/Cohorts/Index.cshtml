@@ -43,10 +43,21 @@ else
                         <td>@(cohort.LocationLabel ?? "Not specified")</td>
                         <td>@(cohort.IsArchived ? "Archived" : "Not archived")</td>
                         <td>
+                        <td>
                             <a asp-page="./Members"
-                               asp-route-id="@cohort.CohortId">
-                                Manage members
+                            asp-route-id="@cohort.CohortId">
+                                @(cohort.IsArchived ? "View members" : "Manage members")
                             </a>
+
+                            @if (!cohort.IsArchived)
+                            {
+                                <span class="mx-2">|</span>
+
+                                <a asp-page="./Archive"
+                                asp-route-id="@cohort.CohortId">
+                                    Archive
+                                </a>
+                            }
                         </td>
                     </tr>
                 }

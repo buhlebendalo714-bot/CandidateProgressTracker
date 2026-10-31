@@ -1,0 +1,87 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.ArchiveModel
+@{
+    ViewData["Title"] = "Archive cohort";
+}
+
+<h1>Archive cohort</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Name</dt>
+    <dd class="col-sm-9">@Model.Cohort.Name</dd>
+
+    <dt class="col-sm-3">Code</dt>
+    <dd class="col-sm-9">@Model.Cohort.Code</dd>
+
+    <dt class="col-sm-3">Location</dt>
+    <dd class="col-sm-9">
+        @(Model.Cohort.LocationLabel ?? "Not specified")
+    </dd>
+</dl>
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+@if (Model.Cohort.IsArchived)
+{
+    <div class="alert alert-info">
+        This cohort is already archived.
+    </div>
+
+    <a asp-page="./Index" class="btn btn-secondary">
+        Back to cohorts
+    </a>
+}
+else if (Model.CanSubmit)
+{
+    <div class="alert alert-warning">
+        Archiving prevents new membership assignments and membership
+        endings in this cohort. Existing memberships and their history
+        remain unchanged. There is currently no restore option.
+    </div>
+
+    <form method="post" asp-route-id="@Model.Cohort.CohortId">
+        <input type="hidden" asp-for="Input.RowVersion" />
+
+        <div class="mb-3">
+            <label asp-for="Input.Reason" class="form-label"></label>
+            <textarea asp-for="Input.Reason"
+                      class="form-control"
+                      rows="4"
+                      maxlength="1000"
+                      aria-describedby="archiveReasonHelp"></textarea>
+            <div id="archiveReasonHelp" class="form-text">
+                Explain why this cohort is being archived.
+            </div>
+            <span asp-validation-for="Input.Reason"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-warning">
+            Archive cohort
+        </button>
+
+        <a asp-page="./Index" class="btn btn-secondary">
+            Cancel
+        </a>
+    </form>
+}
+else
+{
+    <p>Reload the page to review the cohort before trying again.</p>
+
+    <a asp-page="./Archive"
+       asp-route-id="@Model.Cohort.CohortId"
+       class="btn btn-primary">
+        Reload page
+    </a>
+
+    <a asp-page="./Index" class="btn btn-secondary">
+        Back to cohorts
+    </a>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
