@@ -287,4 +287,92 @@ public class CohortArchiveTests
         Assert.Equal(archived.ArchivedBy, saved.ArchivedBy);
         Assert.True(saved.RowVersion.SequenceEqual(archived.RowVersion));
     }
+
+    [Fact]
+    public async Task Query_returns_unarchived_cohort_without_archive_details()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var scenario = await ArrangeAsync(database);
+
+        await using var scope = database.Services.CreateAsyncScope();
+
+        var query = scope.ServiceProvider
+            .GetRequiredService<ICohortQueryService>();
+
+        var details = await query.GetAsync(scenario.Cohort.CohortId);
+
+        Assert.NotNull(details);
+        Assert.Equal(scenario.Cohort.CohortId, details.CohortId);
+        Assert.Equal(scenario.Cohort.Name, details.Name);
+        Assert.Equal(scenario.Cohort.Code, details.Code);
+        Assert.Equal(scenario.Cohort.LocationLabel, details.LocationLabel);
+        Assert.False(details.IsArchived);
+        Assert.Null(details.ArchivedAt);
+        Assert.Null(details.ArchivedByUserName);
+        Assert.Null(details.ArchiveReason);
+        Assert.True(details.RowVersion.SequenceEqual(
+            scenario.Cohort.RowVersion));
+    }
+
+    [Fact]
+    public async Task Query_returns_archive_audit_details_and_administrator_username()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var scenario = await ArrangeAsync(database);
+
+        var result = await ArchiveAsync(
+            database,
+            scenario,
+            "  Programme completed  ",
+            scenario.Cohort.RowVersion,
+            scenario.AdminId);
+
+        Assert.True(result.Succeeded, string.Join("; ", result.Errors));
+
+        var saved = await ReadCohortAsync(database);
+
+        await using var scope = database.Services.CreateAsyncScope();
+
+        var db = scope.ServiceProvider
+            .GetRequiredService<TrackerDbContext>();
+
+        var expectedUserName = await db.Users
+            .AsNoTracking()
+            .Where(user => user.Id == scenario.AdminId)
+            .Select(user => user.UserName)
+            .SingleAsync();
+
+        var query = scope.ServiceProvider
+            .GetRequiredService<ICohortQueryService>();
+
+        var details = await query.GetAsync(scenario.Cohort.CohortId);
+
+        Assert.NotNull(details);
+        Assert.Equal(scenario.Cohort.CohortId, details.CohortId);
+        Assert.True(details.IsArchived);
+        Assert.Equal("Programme completed", details.ArchiveReason);
+        Assert.NotNull(details.ArchivedAt);
+        Assert.Equal(saved.ArchivedAt, details.ArchivedAt);
+        Assert.False(string.IsNullOrWhiteSpace(expectedUserName));
+        Assert.Equal(expectedUserName, details.ArchivedByUserName);
+        Assert.True(details.RowVersion.SequenceEqual(saved.RowVersion));
+    }
+
+    [Fact]
+    public async Task Query_returns_null_for_unknown_cohort()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+
+        // Keep a real cohort in the database to verify filtering by ID.
+        await ArrangeAsync(database);
+
+        await using var scope = database.Services.CreateAsyncScope();
+
+        var query = scope.ServiceProvider
+            .GetRequiredService<ICohortQueryService>();
+
+        var details = await query.GetAsync(Guid.NewGuid());
+
+        Assert.Null(details);
+    }
 }
