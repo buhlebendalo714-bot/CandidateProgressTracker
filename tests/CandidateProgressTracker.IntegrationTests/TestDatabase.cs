@@ -63,6 +63,10 @@ internal sealed class TestDatabase : IAsyncDisposable
             ICohortQueryService, 
             CohortQueryService>();
 
+        services.AddScoped<
+            IMentorCohortQueryService, 
+            MentorCohortQueryService>();
+
         var database = new TestDatabase(
             services.BuildServiceProvider(
                 new ServiceProviderOptions
