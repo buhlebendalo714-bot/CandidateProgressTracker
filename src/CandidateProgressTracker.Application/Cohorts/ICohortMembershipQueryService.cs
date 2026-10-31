@@ -8,7 +8,10 @@ public record MembershipSummary(
     MembershipKind Kind,
     DateTimeOffset StartsAt,
     DateTimeOffset? EndsAt,
-    byte[] RowVersion);
+    byte[] RowVersion,
+    string? EndReason,
+    string? EndedByUserName,
+    DateTimeOffset? EndedAt);
 
 public record EligibleMember(
     string UserId,

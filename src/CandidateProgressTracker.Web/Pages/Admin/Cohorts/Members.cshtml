@@ -100,6 +100,7 @@ else
                     <th scope="col">Starts (UTC)</th>
                     <th scope="col">Ends (UTC)</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Ending details</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -125,6 +126,34 @@ else
                                 : "Open-ended")
                         </td>
                         <td>@status</td>
+                        <td>
+                            @if (membership.EndsAt is not null)
+                            {
+                                <details>
+                                    <summary>View ending details</summary>
+
+                                    <dl class="mt-2 mb-0">
+                                        <dt>Reason</dt>
+                                        <dd class="text-break" style="white-space: pre-wrap;">@(membership.EndReason ?? "Not recorded")</dd>
+
+                                        <dt>Ended by</dt>
+                                        <dd>@(membership.EndedByUserName ?? "Not recorded")</dd>
+
+                                        <dt>Recorded at (UTC)</dt>
+                                        <dd>
+                                            @(membership.EndedAt.HasValue
+                                                ? membership.EndedAt.Value.ToUniversalTime()
+                                                    .ToString("yyyy-MM-dd HH:mm:ss")
+                                                : "Not recorded")
+                                        </dd>
+                                    </dl>
+                                </details>
+                            }
+                            else
+                            {
+                                <span>Not ended</span>
+                            }
+                        </td>
                         <td>
                             @if (!Model.Details.IsArchived
                                 && membership.EndsAt is null

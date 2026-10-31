@@ -29,6 +29,9 @@ public class CohortMembershipQueryService : ICohortMembershipQueryService
             from membership in _db.CohortMemberships.AsNoTracking()
             join user in _db.Users.AsNoTracking()
                 on membership.UserId equals user.Id
+            join endingUser in _db.Users.AsNoTracking()
+                on membership.EndedBy equals endingUser.Id into endingUsers
+            from endingUser in endingUsers.DefaultIfEmpty()
             where membership.CohortId == cohortId
             orderby membership.StartsAt descending,
                 membership.MembershipId
@@ -38,7 +41,10 @@ public class CohortMembershipQueryService : ICohortMembershipQueryService
                 membership.MembershipKind,
                 membership.StartsAt,
                 membership.EndsAt,
-                membership.RowVersion))
+                membership.RowVersion,
+                membership.EndReason,
+                endingUser == null ? null : endingUser.UserName,
+                membership.EndedAt))
             .ToListAsync();
 
         var eligibleMembers = new List<EligibleMember>();
