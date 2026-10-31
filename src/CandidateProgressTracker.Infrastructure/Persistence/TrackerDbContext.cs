@@ -15,10 +15,14 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
 
     public DbSet<Cohort> Cohorts => Set<Cohort>();
 
+    public DbSet<CohortMembership> CohortMemberships =>
+        Set<CohortMembership>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
         builder.ApplyConfiguration(new CohortConfiguration());
+        builder.ApplyConfiguration(new CohortMembershipConfiguration());
     }
 }

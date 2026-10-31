@@ -71,6 +71,63 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.ToTable("Cohorts", (string)null);
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.CohortMembership", b =>
+                {
+                    b.Property<Guid>("MembershipId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChangeReason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("CohortId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset?>("EndsAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<byte>("MembershipKind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("MembershipId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CohortId", "UserId", "MembershipKind")
+                        .IsUnique()
+                        .HasFilter("[EndsAt] IS NULL");
+
+                    b.ToTable("CohortMemberships", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CohortMemberships_DateOrder", "[EndsAt] IS NULL OR [EndsAt] > [StartsAt]");
+
+                            t.HasCheckConstraint("CK_CohortMemberships_Kind", "[MembershipKind] IN (1, 2)");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -274,6 +331,27 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.CohortMembership", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.Cohort", null)
+                        .WithMany()
+                        .HasForeignKey("CohortId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
