@@ -1,0 +1,39 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Mentor.CohortModel
+@{
+    ViewData["Title"] = Model.Cohort.Name;
+}
+
+<h1>@Model.Cohort.Name</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Code</dt>
+    <dd class="col-sm-9">@Model.Cohort.Code</dd>
+
+    <dt class="col-sm-3">Location</dt>
+    <dd class="col-sm-9">
+        @(Model.Cohort.LocationLabel ?? "Not specified")
+    </dd>
+</dl>
+
+<h2>Current candidates</h2>
+
+@if (Model.Cohort.Candidates.Count == 0)
+{
+    <p>No candidates are currently assigned to this cohort.</p>
+}
+else
+{
+    <p>Current candidates: @Model.Cohort.Candidates.Count</p>
+
+    <ul class="list-group mb-3">
+        @foreach (var candidate in Model.Cohort.Candidates)
+        {
+            <li class="list-group-item">@candidate.UserName</li>
+        }
+    </ul>
+}
+
+<a asp-page="./Index" class="btn btn-secondary">
+    Back to my cohorts
+</a>

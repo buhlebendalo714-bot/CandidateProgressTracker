@@ -30,7 +30,12 @@ else
                 @foreach (var cohort in Model.Cohorts)
                 {
                     <tr>
-                        <td>@cohort.Name</td>
+                        <td>
+                            <a asp-page="./Cohort"
+                            asp-route-id="@cohort.CohortId">
+                                @cohort.Name
+                            </a>
+                        </td>
                         <td>@cohort.Code</td>
                         <td>@(cohort.LocationLabel ?? "Not specified")</td>
                     </tr>
