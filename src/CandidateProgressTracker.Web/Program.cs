@@ -1,3 +1,5 @@
+using CandidateProgressTracker.Application.Cohorts;
+using CandidateProgressTracker.Infrastructure.Cohorts;
 using CandidateProgressTracker.Application.Accounts;
 using CandidateProgressTracker.Infrastructure.Identity;
 using CandidateProgressTracker.Infrastructure.Persistence;
@@ -40,6 +42,10 @@ builder.Services.AddRazorPages(options =>
 builder.Services.AddScoped<IAccountQueryService, AccountQueryService>();
 
 builder.Services.AddScoped<IAccountCreationService, AccountCreationService>();
+
+builder.Services.AddScoped<ICohortCreationService, CohortCreationService>();
+
+builder.Services.AddScoped<ICohortQueryService, CohortQueryService>();
 
 var app = builder.Build();
 

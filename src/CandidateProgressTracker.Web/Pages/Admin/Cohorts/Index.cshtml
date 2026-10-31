@@ -1,0 +1,49 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.IndexModel
+@{
+    ViewData["Title"] = "Cohorts";
+}
+
+<h1>Cohorts</h1>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<p>
+    <a asp-page="./Create" class="btn btn-primary">Create cohort</a>
+</p>
+
+<p>Showing up to 50 cohorts, ordered by name.</p>
+
+@if (Model.Cohorts.Count == 0)
+{
+    <p>No cohorts have been created yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Code</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Archive status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cohort in Model.Cohorts)
+                {
+                    <tr>
+                        <td>@cohort.Name</td>
+                        <td>@cohort.Code</td>
+                        <td>@(cohort.LocationLabel ?? "Not specified")</td>
+                        <td>@(cohort.IsArchived ? "Archived" : "Not archived")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
