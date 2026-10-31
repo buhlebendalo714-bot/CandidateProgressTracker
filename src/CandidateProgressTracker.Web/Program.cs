@@ -32,11 +32,18 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdministratorOnly", policy =>
         policy.RequireRole("Administrator"));
+
+    options.AddPolicy("MentorOnly", policy =>
+        policy.RequireRole("Mentor"));
 });
 
 builder.Services.AddRazorPages(options =>
 {
-    options.Conventions.AuthorizeFolder("/Admin", "AdministratorOnly");
+    options.Conventions.AuthorizeFolder(
+        "/Admin", "AdministratorOnly");
+
+    options.Conventions.AuthorizeFolder(
+        "/Mentor", "MentorOnly");
 });
 
 builder.Services.AddScoped<IAccountQueryService, AccountQueryService>();
@@ -54,6 +61,8 @@ builder.Services.AddScoped<ICohortMembershipQueryService, CohortMembershipQueryS
 builder.Services.AddScoped<ICohortMembershipEndingService, CohortMembershipEndingService>();
 
 builder.Services.AddScoped<ICohortArchiveService, CohortArchiveService>();
+
+builder.Services.AddScoped<IMentorCohortQueryService, MentorCohortQueryService>();
 
 var app = builder.Build();
 
