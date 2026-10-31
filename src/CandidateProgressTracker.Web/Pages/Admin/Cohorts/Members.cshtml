@@ -1,0 +1,136 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.MembersModel
+@{
+    ViewData["Title"] = "Cohort members";
+    var now = DateTimeOffset.UtcNow;
+}
+
+<h1>@Model.Details.Name</h1>
+<p>Cohort code: <strong>@Model.Details.Code</strong></p>
+
+<p>
+    <a asp-page="./Index">Back to cohorts</a>
+</p>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<div asp-validation-summary="ModelOnly"
+     class="text-danger" role="alert"></div>
+
+@if (Model.Details.IsArchived)
+{
+    <div class="alert alert-info">
+        This cohort is archived. New memberships cannot be added.
+    </div>
+}
+else
+{
+    <h2>Assign a member</h2>
+
+    @if (Model.Details.EligibleMembers.Count == 0)
+    {
+        <p>No eligible Candidate or Mentor assignments are available.</p>
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <form method="post"
+                      asp-route-id="@Model.Details.CohortId">
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Selection"
+                               class="form-label"></label>
+
+                        <select asp-for="Input.Selection"
+                                class="form-select">
+                            <option value="">Select a member and role</option>
+
+                            @foreach (var member in Model.Details.EligibleMembers)
+                            {
+                                <option value="@($"{member.UserId}|{(byte)member.Kind}")">
+                                    @member.UserName — @member.Kind
+                                </option>
+                            }
+                        </select>
+
+                        <span asp-validation-for="Input.Selection"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.ChangeReason"
+                               class="form-label"></label>
+
+                        <textarea asp-for="Input.ChangeReason"
+                                  class="form-control"
+                                  rows="3"></textarea>
+
+                        <span asp-validation-for="Input.ChangeReason"
+                              class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Assign member
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+}
+
+<h2>Membership history</h2>
+<p>Dates below are displayed in UTC.</p>
+
+@if (Model.Details.Memberships.Count == 0)
+{
+    <p>No members have been assigned to this cohort.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Role in cohort</th>
+                    <th scope="col">Starts (UTC)</th>
+                    <th scope="col">Ends (UTC)</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var membership in Model.Details.Memberships)
+                {
+                    var status = membership.EndsAt.HasValue
+                        && membership.EndsAt.Value <= now
+                        ? "Ended"
+                        : membership.StartsAt > now
+                            ? "Scheduled"
+                            : "Active";
+
+                    <tr>
+                        <td>@membership.UserName</td>
+                        <td>@membership.Kind</td>
+                        <td>
+                            @membership.StartsAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm")
+                        </td>
+                        <td>
+                            @(membership.EndsAt.HasValue
+                                ? membership.EndsAt.Value.ToUniversalTime().ToString("yyyy-MM-dd HH:mm")
+                                : "Open-ended")
+                        </td>
+                        <td>@status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
