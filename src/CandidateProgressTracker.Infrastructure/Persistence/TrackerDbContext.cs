@@ -1,3 +1,4 @@
+using CandidateProgressTracker.Domain.Learning;
 using CandidateProgressTracker.Domain.Cohorts;
 using CandidateProgressTracker.Infrastructure.Persistence.Configurations;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,9 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
 
     public DbSet<CohortMembership> CohortMemberships =>
         Set<CohortMembership>();
+        
+    public DbSet<LearningCycle> LearningCycles => 
+        Set<LearningCycle>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -24,5 +28,6 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
 
         builder.ApplyConfiguration(new CohortConfiguration());
         builder.ApplyConfiguration(new CohortMembershipConfiguration());
+        builder.ApplyConfiguration(new LearningCycleConfiguration());
     }
 }

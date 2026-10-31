@@ -1,3 +1,5 @@
+using CandidateProgressTracker.Application.Learning;
+using CandidateProgressTracker.Infrastructure.Learning;
 using CandidateProgressTracker.Application.Cohorts;
 using CandidateProgressTracker.Infrastructure.Cohorts;
 using CandidateProgressTracker.Application.Accounts;
@@ -71,6 +73,8 @@ builder.Services.AddScoped<ICohortArchiveService, CohortArchiveService>();
 builder.Services.AddScoped<IMentorCohortQueryService, MentorCohortQueryService>();
 
 builder.Services.AddScoped<ICandidateCohortQueryService, CandidateCohortQueryService>();
+
+builder.Services.AddScoped<ILearningCycleService, LearningCycleService>();
 
 var app = builder.Build();
 

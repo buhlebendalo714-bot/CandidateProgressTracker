@@ -55,6 +55,12 @@ else
                             asp-route-id="@cohort.CohortId">
                                 @(cohort.IsArchived ? "View archive details" : "Archive")
                             </a>
+                            <span class="mx-2">|</span>
+
+                            <a asp-page="./Cycles"
+                            asp-route-id="@cohort.CohortId">
+                                Learning cycles
+                            </a>
                         </td>
                     </tr>
                 }

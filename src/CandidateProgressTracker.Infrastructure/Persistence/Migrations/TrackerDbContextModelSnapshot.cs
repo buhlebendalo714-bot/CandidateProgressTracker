@@ -154,6 +154,73 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.LearningCycle", b =>
+                {
+                    b.Property<Guid>("CycleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArchiveReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("ArchivedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CohortId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateOnly>("EndsOn")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateOnly>("StartsOn")
+                        .HasColumnType("date");
+
+                    b.HasKey("CycleId");
+
+                    b.HasIndex("ArchivedBy");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("CohortId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("LearningCycles", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_LearningCycles_ArchiveDetails", "([IsArchived] = 0 AND [ArchivedAt] IS NULL\r\n    AND [ArchivedBy] IS NULL AND [ArchiveReason] IS NULL)\r\nOR\r\n([IsArchived] = 1 AND [ArchivedAt] IS NOT NULL\r\n    AND [ArchivedBy] IS NOT NULL\r\n    AND [ArchiveReason] IS NOT NULL\r\n    AND LEN(LTRIM(RTRIM([ArchiveReason]))) > 0)");
+
+                            t.HasCheckConstraint("CK_LearningCycles_DateOrder", "[EndsOn] >= [StartsOn]");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -388,6 +455,26 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.LearningCycle", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.Cohort", null)
+                        .WithMany()
+                        .HasForeignKey("CohortId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

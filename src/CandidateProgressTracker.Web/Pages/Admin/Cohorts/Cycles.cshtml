@@ -1,0 +1,106 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.CyclesModel
+@{
+    ViewData["Title"] = "Learning cycles";
+}
+
+<h1>Learning cycles</h1>
+<p>Cohort: <strong>@Model.Cohort.CohortName</strong></p>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+@if (Model.Cohort.IsArchived)
+{
+    <div class="alert alert-info">
+        This cohort is archived. Learning cycles are read-only.
+    </div>
+}
+else
+{
+    <h2>Create cycle</h2>
+
+    <form method="post"
+          asp-route-id="@Model.Cohort.CohortId"
+          class="mb-4">
+        <div class="mb-3">
+            <label asp-for="Input.Name" class="form-label"></label>
+            <input asp-for="Input.Name"
+                   class="form-control"
+                   maxlength="150" />
+            <span asp-validation-for="Input.Name"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Input.StartsOn" class="form-label"></label>
+                <input asp-for="Input.StartsOn"
+                       type="date"
+                       class="form-control" />
+                <span asp-validation-for="Input.StartsOn"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="Input.EndsOn" class="form-label"></label>
+                <input asp-for="Input.EndsOn"
+                       type="date"
+                       class="form-control" />
+                <span asp-validation-for="Input.EndsOn"
+                      class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Create cycle
+        </button>
+    </form>
+}
+
+<h2>Existing cycles</h2>
+
+@if (Model.Cohort.Cycles.Count == 0)
+{
+    <p>No learning cycles have been created for this cohort.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Start date</th>
+                    <th scope="col">End date</th>
+                    <th scope="col">Archive status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cycle in Model.Cohort.Cycles)
+                {
+                    <tr>
+                        <td>@cycle.Name</td>
+                        <td>@cycle.StartsOn.ToString("yyyy-MM-dd")</td>
+                        <td>@cycle.EndsOn.ToString("yyyy-MM-dd")</td>
+                        <td>@(cycle.IsArchived ? "Archived" : "Not archived")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a asp-page="./Index" class="btn btn-secondary">
+    Back to cohorts
+</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

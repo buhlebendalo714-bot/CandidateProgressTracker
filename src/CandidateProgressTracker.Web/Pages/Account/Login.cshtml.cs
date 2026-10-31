@@ -10,10 +10,14 @@ namespace CandidateProgressTracker.Web.Pages.Account;
 public class LoginModel : PageModel
 {
     private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<IdentityUser> _userManager;
 
-    public LoginModel(SignInManager<IdentityUser> signInManager)
+    public LoginModel(
+        SignInManager<IdentityUser> signInManager,
+        UserManager<IdentityUser> userManager)
     {
         _signInManager = signInManager;
+        _userManager = userManager;
     }
 
     [BindProperty]
@@ -33,11 +37,13 @@ public class LoginModel : PageModel
         public string Password { get; set; } = string.Empty;
     }
 
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync()
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            return LocalRedirect(GetSafeReturnUrl());
+            var user = await _userManager.GetUserAsync(User);
+
+            return LocalRedirect(await GetDestinationAsync(user));
         }
 
         return Page();
@@ -50,15 +56,19 @@ public class LoginModel : PageModel
             return Page();
         }
 
+        var userName = Input.UserName.Trim();
+
         var result = await _signInManager.PasswordSignInAsync(
-            Input.UserName.Trim(),
+            userName,
             Input.Password,
             isPersistent: false,
             lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
-            return LocalRedirect(GetSafeReturnUrl());
+            var user = await _userManager.FindByNameAsync(userName);
+
+            return LocalRedirect(await GetDestinationAsync(user));
         }
 
         ModelState.AddModelError(
@@ -68,10 +78,36 @@ public class LoginModel : PageModel
         return Page();
     }
 
-    private string GetSafeReturnUrl()
+    private async Task<string> GetDestinationAsync(IdentityUser? user)
     {
-        return Url.IsLocalUrl(ReturnUrl)
-            ? ReturnUrl!
-            : Url.Content("~/");
+        if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
+            Url.IsLocalUrl(ReturnUrl))
+        {
+            return ReturnUrl;
+        }
+
+        if (user is null)
+        {
+            return Url.Content("~/");
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        if (roles.Contains("Administrator"))
+        {
+            return Url.Content("~/Admin");
+        }
+
+        if (roles.Contains("Mentor"))
+        {
+            return Url.Content("~/Mentor");
+        }
+
+        if (roles.Contains("Candidate"))
+        {
+            return Url.Content("~/Candidate");
+        }
+
+        return Url.Content("~/");
     }
 }
