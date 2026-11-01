@@ -23,6 +23,9 @@ public class TeamsModel : PageModel
     public string CandidateId { get; private set; } = string.Empty;
     public string Reason { get; private set; } = string.Empty;
 
+    public Guid EndingMembershipId { get; private set; }
+    public string EndReason { get; private set; } = string.Empty;
+
     private string? ActorId =>
         User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -118,6 +121,42 @@ public class TeamsModel : PageModel
             projectId, actorId, result, "Candidate assigned to team.");
     }
 
+    public async Task<IActionResult> OnPostEndAsync(
+        Guid projectId,
+        Guid membershipId,
+        string? rowVersion,
+        string? endReason)
+    {
+        EndingMembershipId = membershipId;
+        EndReason = endReason ?? string.Empty;
+        var actorId = ActorId;
+
+        if (string.IsNullOrWhiteSpace(actorId))
+        {
+            return Challenge();
+        }
+
+        if (!await LoadAsync(projectId, actorId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return Page();
+        }
+
+        var result = await _service.EndAsync(
+            projectId,
+            membershipId,
+            rowVersion ?? string.Empty,
+            EndReason,
+            actorId);
+
+        return await FinishAsync(
+            projectId, actorId, result, "Team membership ended.");
+    }
+
     private async Task<IActionResult> FinishAsync(
         Guid projectId,
         string actorId,
@@ -141,39 +180,5 @@ public class TeamsModel : PageModel
         }
 
         return Page();
-    }
-
-    public async Task<IActionResult> OnPostEndAsync(
-        Guid projectId,
-        Guid membershipId,
-        string? rowVersion,
-        string? endReason)
-    {
-        var actorId = ActorId;
-
-        if (string.IsNullOrWhiteSpace(actorId))
-        {
-            return Challenge();
-        }
-
-        if (!await LoadAsync(projectId, actorId))
-        {
-            return NotFound();
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
-
-        var result = await _service.EndAsync(
-            projectId,
-            membershipId,
-            rowVersion ?? string.Empty,
-            endReason ?? string.Empty,
-            actorId);
-
-        return await FinishAsync(
-            projectId, actorId, result, "Team membership ended.");
     }
 }

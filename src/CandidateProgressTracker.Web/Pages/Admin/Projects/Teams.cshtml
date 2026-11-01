@@ -142,25 +142,26 @@ else
                                 @if (Model.Project.CanManage)
                                 {
                                     <form method="post"
-                                        asp-page-handler="End"
-                                        asp-route-projectId="@Model.Project.ProjectId"
-                                        class="mt-2">
+                                          asp-page-handler="End"
+                                          asp-route-projectId="@Model.Project.ProjectId"
+                                          class="mt-2">
                                         <input type="hidden"
-                                            name="membershipId"
-                                            value="@member.TeamMembershipId" />
+                                               name="membershipId"
+                                               value="@member.TeamMembershipId" />
                                         <input type="hidden"
-                                            name="rowVersion"
-                                            value="@member.RowVersion" />
+                                               name="rowVersion"
+                                               value="@member.RowVersion" />
 
                                         <label for="end-@member.TeamMembershipId"
-                                            class="form-label">
+                                               class="form-label">
                                             Reason for ending membership
                                         </label>
                                         <input id="end-@member.TeamMembershipId"
-                                            name="endReason"
-                                            class="form-control mb-2"
-                                            maxlength="1000"
-                                            required />
+                                               name="endReason"
+                                               value="@(Model.EndingMembershipId == member.TeamMembershipId ? Model.EndReason : string.Empty)"
+                                               class="form-control mb-2"
+                                               maxlength="1000"
+                                               required />
 
                                         <button type="submit"
                                                 class="btn btn-outline-danger btn-sm">
@@ -168,7 +169,8 @@ else
                                         </button>
                                     </form>
                                 }
-                            </li>                        }
+                            </li>
+                        }
                     </ul>
                 }
             </div>
@@ -177,7 +179,9 @@ else
 }
 
 <h2>Membership history</h2>
-<p class="text-muted">All times are UTC. Audit actors are recorded by user ID.</p>
+<p class="text-muted">
+    All times are UTC. Audit actors are recorded by user ID.
+</p>
 
 @if (Model.Project.History.Count == 0)
 {
