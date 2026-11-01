@@ -96,6 +96,17 @@ else
                             asp-route-projectId="@project.ProjectId">
                                 @project.Title
                             </a>
+
+                            @if (project.Mode ==
+                                CandidateProgressTracker.Domain.Learning.ProjectMode.Team)
+                            {
+                                <span class="mx-2">|</span>
+
+                                <a asp-page="./Teams"
+                                asp-route-projectId="@project.ProjectId">
+                                    Teams
+                                </a>
+                            }
                         </td>
                         <td>@project.Mode</td>
                         <td>@(project.IsArchived ? "Archived" : "Not archived")</td>

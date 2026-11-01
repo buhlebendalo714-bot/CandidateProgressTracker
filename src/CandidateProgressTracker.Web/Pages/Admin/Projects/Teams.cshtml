@@ -1,0 +1,235 @@
+@page "{projectId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Projects.TeamsModel
+@{
+    ViewData["Title"] = "Project teams";
+}
+
+<h1>Project teams</h1>
+<p>Project: <strong>@Model.Project.ProjectTitle</strong></p>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+@if (!Model.Project.CanManage)
+{
+    <div class="alert alert-info">
+        Team management is available only for Team-mode projects
+        whose project, cycle, and cohort are unarchived.
+    </div>
+}
+else
+{
+    <h2>Create team</h2>
+
+    <form method="post"
+          asp-page-handler="Create"
+          asp-route-projectId="@Model.Project.ProjectId"
+          class="mb-4">
+        <div class="mb-3">
+            <label for="teamName" class="form-label">Team name</label>
+            <input id="teamName"
+                   name="teamName"
+                   value="@Model.TeamName"
+                   class="form-control"
+                   maxlength="150"
+                   required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Create team
+        </button>
+    </form>
+
+    <h2>Assign candidate</h2>
+
+    @if (Model.Project.Teams.Count == 0)
+    {
+        <p>Create a team before assigning candidates.</p>
+    }
+    else if (Model.Project.EligibleCandidates.Count == 0)
+    {
+        <p>No eligible candidates are available for assignment.</p>
+    }
+    else
+    {
+        <form method="post"
+              asp-page-handler="Assign"
+              asp-route-projectId="@Model.Project.ProjectId"
+              class="mb-4">
+            <div class="mb-3">
+                <label for="teamId" class="form-label">Team</label>
+                <select id="teamId"
+                        name="teamId"
+                        class="form-select"
+                        required>
+                    <option value="">Select a team</option>
+                    @foreach (var team in Model.Project.Teams)
+                    {
+                        <option value="@team.TeamId"
+                                selected="@(team.TeamId == Model.SelectedTeamId)">
+                            @team.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="candidateId" class="form-label">Candidate</label>
+                <select id="candidateId"
+                        name="candidateId"
+                        class="form-select"
+                        required>
+                    <option value="">Select a candidate</option>
+                    @foreach (var candidate in Model.Project.EligibleCandidates)
+                    {
+                        <option value="@candidate.UserId"
+                                selected="@(candidate.UserId == Model.CandidateId)">
+                            @candidate.UserName
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="reason" class="form-label">Assignment reason</label>
+                <textarea id="reason"
+                          name="reason"
+                          class="form-control"
+                          rows="3"
+                          maxlength="1000"
+                          required>@Model.Reason</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Assign candidate
+            </button>
+        </form>
+    }
+}
+
+<h2>Existing teams</h2>
+
+@if (Model.Project.Teams.Count == 0)
+{
+    <p>No teams have been created for this project.</p>
+}
+else
+{
+    @foreach (var team in Model.Project.Teams)
+    {
+        <section class="card mb-3">
+            <div class="card-body">
+                <h3 class="h5">@team.Name</h3>
+
+                @if (team.Members.Count == 0)
+                {
+                    <p class="mb-0">No current team memberships.</p>
+                }
+                else
+                {
+                    <ul class="mb-0">
+                        @foreach (var member in team.Members)
+                        {
+                            <li class="mb-3">
+                                <strong>@member.UserName</strong>
+
+                                @if (Model.Project.CanManage)
+                                {
+                                    <form method="post"
+                                        asp-page-handler="End"
+                                        asp-route-projectId="@Model.Project.ProjectId"
+                                        class="mt-2">
+                                        <input type="hidden"
+                                            name="membershipId"
+                                            value="@member.TeamMembershipId" />
+                                        <input type="hidden"
+                                            name="rowVersion"
+                                            value="@member.RowVersion" />
+
+                                        <label for="end-@member.TeamMembershipId"
+                                            class="form-label">
+                                            Reason for ending membership
+                                        </label>
+                                        <input id="end-@member.TeamMembershipId"
+                                            name="endReason"
+                                            class="form-control mb-2"
+                                            maxlength="1000"
+                                            required />
+
+                                        <button type="submit"
+                                                class="btn btn-outline-danger btn-sm">
+                                            End membership
+                                        </button>
+                                    </form>
+                                }
+                            </li>                        }
+                    </ul>
+                }
+            </div>
+        </section>
+    }
+}
+
+<h2>Membership history</h2>
+<p class="text-muted">All times are UTC. Audit actors are recorded by user ID.</p>
+
+@if (Model.Project.History.Count == 0)
+{
+    <p>No membership history yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Candidate / team</th>
+                    <th scope="col">Assigned</th>
+                    <th scope="col">Ended</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Project.History)
+                {
+                    <tr>
+                        <td>
+                            <strong>@item.UserName</strong><br />
+                            @item.TeamName
+                        </td>
+                        <td>
+                            @item.StartsAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                            <div>@item.ChangeReason</div>
+                            <small>By: @item.ChangedBy</small>
+                        </td>
+                        <td>
+                            @if (item.EndsAt is DateTimeOffset ended)
+                            {
+                                <div>
+                                    @ended.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                                </div>
+                                <div>@(item.EndReason ?? "Not recorded")</div>
+                                <small>By: @(item.EndedBy ?? "Not recorded")</small>
+                            }
+                            else
+                            {
+                                <span>No ending date</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a asp-page="./Index"
+   asp-route-cycleId="@Model.Project.CycleId"
+   class="btn btn-secondary">
+    Back to projects
+</a>
