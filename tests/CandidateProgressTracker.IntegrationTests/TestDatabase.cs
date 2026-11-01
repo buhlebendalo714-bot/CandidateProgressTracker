@@ -1,3 +1,5 @@
+using CandidateProgressTracker.Application.Learning;
+using CandidateProgressTracker.Infrastructure.Learning;
 using CandidateProgressTracker.Application.Cohorts;
 using CandidateProgressTracker.Infrastructure.Cohorts;
 using CandidateProgressTracker.Application.Accounts;
@@ -66,6 +68,22 @@ internal sealed class TestDatabase : IAsyncDisposable
         services.AddScoped<
             IMentorCohortQueryService, 
             MentorCohortQueryService>();
+
+        services.AddScoped<
+            ILearningCycleService, 
+            LearningCycleService>();
+
+        services.AddScoped<
+            IProjectService, 
+            ProjectService>();
+
+        services.AddScoped<
+            IMilestoneService, 
+            MilestoneService>();
+            
+        services.AddScoped<
+            IMemberCycleQueryService, 
+            MemberCycleQueryService>();
 
         var database = new TestDatabase(
             services.BuildServiceProvider(
