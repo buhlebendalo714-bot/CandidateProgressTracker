@@ -221,6 +221,75 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Project", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArchiveReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("ArchivedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Brief")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CycleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<byte>("Mode")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("ProjectId");
+
+                    b.HasAlternateKey("ProjectId", "CycleId");
+
+                    b.HasIndex("ArchivedBy");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("CycleId");
+
+                    b.ToTable("Projects", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Projects_ArchiveDetails", "([IsArchived] = 0 AND [ArchivedAt] IS NULL\r\n    AND [ArchivedBy] IS NULL AND [ArchiveReason] IS NULL)\r\nOR\r\n([IsArchived] = 1 AND [ArchivedAt] IS NOT NULL\r\n    AND [ArchivedBy] IS NOT NULL\r\n    AND [ArchiveReason] IS NOT NULL\r\n    AND LEN(LTRIM(RTRIM([ArchiveReason]))) > 0)");
+
+                            t.HasCheckConstraint("CK_Projects_Mode", "[Mode] IN (1, 2)");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -475,6 +544,26 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Project", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.LearningCycle", null)
+                        .WithMany()
+                        .HasForeignKey("CycleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

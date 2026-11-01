@@ -78,6 +78,8 @@ builder.Services.AddScoped<ILearningCycleService, LearningCycleService>();
 
 builder.Services.AddScoped<IMemberCycleQueryService, MemberCycleQueryService>();
 
+builder.Services.AddScoped<IProjectService, ProjectService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

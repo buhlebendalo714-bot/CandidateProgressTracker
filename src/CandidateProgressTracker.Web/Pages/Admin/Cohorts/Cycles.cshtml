@@ -86,7 +86,12 @@ else
                 @foreach (var cycle in Model.Cohort.Cycles)
                 {
                     <tr>
-                        <td>@cycle.Name</td>
+                        <td>
+                            <a asp-page="/Admin/Projects/Index"
+                            asp-route-cycleId="@cycle.CycleId">
+                                @cycle.Name
+                            </a>
+                        </td>
                         <td>@cycle.StartsOn.ToString("yyyy-MM-dd")</td>
                         <td>@cycle.EndsOn.ToString("yyyy-MM-dd")</td>
                         <td>@(cycle.IsArchived ? "Archived" : "Not archived")</td>
