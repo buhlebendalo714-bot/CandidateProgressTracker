@@ -31,9 +31,14 @@ else
                 {
                     <tr>
                         <td>
-                            <a asp-page="./Cohort"
-                            asp-route-id="@cohort.CohortId">
+                            <a asp-page="./Cohort" asp-route-id="@cohort.CohortId">
                                 @cohort.Name
+                            </a>
+
+                            <span class="mx-2">|</span>
+
+                            <a asp-page="./Cycles" asp-route-id="@cohort.CohortId">
+                                Learning cycles
                             </a>
                         </td>
                         <td>@cohort.Code</td>

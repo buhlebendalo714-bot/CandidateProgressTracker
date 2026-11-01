@@ -76,6 +76,8 @@ builder.Services.AddScoped<ICandidateCohortQueryService, CandidateCohortQuerySer
 
 builder.Services.AddScoped<ILearningCycleService, LearningCycleService>();
 
+builder.Services.AddScoped<IMemberCycleQueryService, MemberCycleQueryService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

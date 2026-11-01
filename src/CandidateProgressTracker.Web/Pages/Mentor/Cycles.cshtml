@@ -1,0 +1,11 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Mentor.CyclesModel
+@{
+    ViewData["Title"] = "Learning cycles";
+}
+
+<partial name="_LearningCycleList" model="Model.Cohort" />
+
+<a asp-page="./Index" class="btn btn-secondary">
+    Back to my cohorts
+</a>
