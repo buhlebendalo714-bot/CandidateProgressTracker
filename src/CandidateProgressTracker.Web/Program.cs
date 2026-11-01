@@ -80,6 +80,8 @@ builder.Services.AddScoped<IMemberCycleQueryService, MemberCycleQueryService>();
 
 builder.Services.AddScoped<IProjectService, ProjectService>();
 
+builder.Services.AddScoped<IMilestoneService, MilestoneService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

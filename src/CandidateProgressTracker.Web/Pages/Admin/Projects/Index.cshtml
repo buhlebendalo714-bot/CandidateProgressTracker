@@ -91,7 +91,12 @@ else
                 @foreach (var project in Model.Cycle.Projects)
                 {
                     <tr>
-                        <td>@project.Title</td>
+                        <td>
+                            <a asp-page="./Milestones"
+                            asp-route-projectId="@project.ProjectId">
+                                @project.Title
+                            </a>
+                        </td>
                         <td>@project.Mode</td>
                         <td>@(project.IsArchived ? "Archived" : "Not archived")</td>
                         <td>

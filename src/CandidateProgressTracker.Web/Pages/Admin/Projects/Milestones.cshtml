@@ -1,0 +1,129 @@
+@page "{projectId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Projects.MilestonesModel
+@{
+    ViewData["Title"] = "Project milestones";
+}
+
+<h1>Project milestones</h1>
+<p>Project: <strong>@Model.Project.ProjectTitle</strong></p>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+@if (Model.Project.IsReadOnly)
+{
+    <div class="alert alert-info">
+        This project or its parent cycle or cohort is archived.
+        Milestones are read-only.
+    </div>
+}
+else
+{
+    <h2>Create milestone</h2>
+
+    <form method="post"
+          asp-route-projectId="@Model.Project.ProjectId"
+          class="mb-4">
+        <div class="mb-3">
+            <label asp-for="Input.SequenceNo" class="form-label"></label>
+            <input asp-for="Input.SequenceNo"
+                   class="form-control"
+                   min="1" />
+            <span asp-validation-for="Input.SequenceNo"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Title" class="form-label"></label>
+            <input asp-for="Input.Title"
+                   class="form-control"
+                   maxlength="200" />
+            <span asp-validation-for="Input.Title"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Instructions" class="form-label"></label>
+            <textarea asp-for="Input.Instructions"
+                      class="form-control"
+                      rows="5"
+                      maxlength="10000"></textarea>
+            <span asp-validation-for="Input.Instructions"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.AcceptanceExpectations"
+                   class="form-label"></label>
+            <textarea asp-for="Input.AcceptanceExpectations"
+                      class="form-control"
+                      rows="4"
+                      maxlength="10000"></textarea>
+            <span asp-validation-for="Input.AcceptanceExpectations"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.EvidencePolicy" class="form-label"></label>
+            <textarea asp-for="Input.EvidencePolicy"
+                      class="form-control"
+                      rows="3"
+                      maxlength="2000"></textarea>
+            <span asp-validation-for="Input.EvidencePolicy"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Create milestone
+        </button>
+    </form>
+}
+
+<h2>Existing milestones</h2>
+
+@if (Model.Project.Milestones.Count == 0)
+{
+    <p>No milestones have been created for this project.</p>
+}
+else
+{
+    @foreach (var milestone in Model.Project.Milestones)
+    {
+        <section class="card mb-3">
+            <div class="card-body">
+                <h3 class="h5">
+                    @milestone.SequenceNo. @milestone.Title
+                </h3>
+
+                <details>
+                    <summary>View requirements</summary>
+
+                    <h4 class="h6 mt-3">Instructions</h4>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@milestone.Instructions</div>
+
+                    <h4 class="h6 mt-3">Acceptance expectations</h4>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@milestone.AcceptanceExpectations</div>
+
+                    <h4 class="h6 mt-3">Evidence requirements</h4>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@milestone.EvidencePolicy</div>
+                </details>
+            </div>
+        </section>
+    }
+}
+
+<a asp-page="./Index"
+   asp-route-cycleId="@Model.Project.CycleId"
+   class="btn btn-secondary">
+    Back to projects
+</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

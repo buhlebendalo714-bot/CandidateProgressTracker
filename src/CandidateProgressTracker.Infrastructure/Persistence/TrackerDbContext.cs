@@ -25,6 +25,9 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
     public DbSet<Project> Projects => 
         Set<Project>();
 
+    public DbSet<Milestone> Milestones => 
+        Set<Milestone>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -33,5 +36,6 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
         builder.ApplyConfiguration(new CohortMembershipConfiguration());
         builder.ApplyConfiguration(new LearningCycleConfiguration());
         builder.ApplyConfiguration(new ProjectConfiguration());
+        builder.ApplyConfiguration(new MilestoneConfiguration());
     }
 }
