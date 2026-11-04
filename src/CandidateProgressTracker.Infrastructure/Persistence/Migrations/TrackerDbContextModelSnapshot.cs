@@ -154,6 +154,140 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Assignment", b =>
+                {
+                    b.Property<Guid>("AssignmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CandidateId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CycleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("MilestoneId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AssignmentId");
+
+                    b.HasIndex("CandidateId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("MilestoneId", "CandidateId")
+                        .IsUnique()
+                        .HasFilter("[CandidateId] IS NOT NULL");
+
+                    b.HasIndex("MilestoneId", "ProjectId");
+
+                    b.HasIndex("MilestoneId", "TeamId")
+                        .IsUnique()
+                        .HasFilter("[TeamId] IS NOT NULL");
+
+                    b.HasIndex("ProjectId", "CycleId");
+
+                    b.HasIndex("TeamId", "DueAt");
+
+                    b.HasIndex("TeamId", "ProjectId");
+
+                    b.HasIndex("CycleId", "CandidateId", "DueAt");
+
+                    b.ToTable("Assignments", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Assignments_ExactlyOneOwner", "([CandidateId] IS NOT NULL AND [TeamId] IS NULL)\r\nOR\r\n([CandidateId] IS NULL AND [TeamId] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_Assignments_UtcTimestamps", "DATEPART(TZOFFSET, [DueAt]) = 0\r\nAND DATEPART(TZOFFSET, [CreatedAt]) = 0");
+                        });
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentRevision", b =>
+                {
+                    b.Property<Guid>("RevisionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AcceptanceSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<string>("EvidencePolicySnapshot")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("InstructionsSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("RevisionNo")
+                        .HasColumnType("int");
+
+                    b.HasKey("RevisionId");
+
+                    b.HasAlternateKey("RevisionId", "AssignmentId");
+
+                    b.HasIndex("ChangedBy");
+
+                    b.HasIndex("AssignmentId", "RevisionNo")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentRevisions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AssignmentRevisions_Reason", "LEN(LTRIM(RTRIM([Reason]))) > 0");
+
+                            t.HasCheckConstraint("CK_AssignmentRevisions_RevisionNo", "[RevisionNo] > 0");
+
+                            t.HasCheckConstraint("CK_AssignmentRevisions_UtcTimestamps", "DATEPART(TZOFFSET, [DueAt]) = 0\r\nAND DATEPART(TZOFFSET, [ChangedAt]) = 0");
+                        });
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.LearningCycle", b =>
                 {
                     b.Property<Guid>("CycleId")
@@ -267,8 +401,6 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
 
                     b.HasKey("MilestoneId");
 
-                    b.HasAlternateKey("MilestoneId", "ProjectId");
-
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("ProjectId", "SequenceNo")
@@ -332,8 +464,6 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("ProjectId");
-
-                    b.HasAlternateKey("ProjectId", "CycleId");
 
                     b.HasIndex("ArchivedBy");
 
@@ -688,6 +818,55 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Assignment", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Milestone", null)
+                        .WithMany()
+                        .HasForeignKey("MilestoneId", "ProjectId")
+                        .HasPrincipalKey("MilestoneId", "ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId", "CycleId")
+                        .HasPrincipalKey("ProjectId", "CycleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.ProjectTeam", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId", "ProjectId")
+                        .HasPrincipalKey("TeamId", "ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentRevision", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Assignment", null)
+                        .WithMany()
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ChangedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

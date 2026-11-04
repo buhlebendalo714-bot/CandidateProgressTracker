@@ -34,6 +34,11 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
     public DbSet<TeamMembership> TeamMemberships => 
         Set<TeamMembership>();
 
+    public DbSet<Assignment> Assignments => Set<Assignment>();
+
+    public DbSet<AssignmentRevision> AssignmentRevisions =>
+        Set<AssignmentRevision>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -45,5 +50,7 @@ public class TrackerDbContext : IdentityDbContext<IdentityUser>
         builder.ApplyConfiguration(new MilestoneConfiguration());
         builder.ApplyConfiguration(new ProjectTeamConfiguration());
         builder.ApplyConfiguration(new TeamMembershipConfiguration());
+        builder.ApplyConfiguration(new AssignmentConfiguration());
+        builder.ApplyConfiguration(new AssignmentRevisionConfiguration());
 }
 }

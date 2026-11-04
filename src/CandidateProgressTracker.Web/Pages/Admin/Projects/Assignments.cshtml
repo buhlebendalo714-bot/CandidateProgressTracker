@@ -1,0 +1,149 @@
+@page "{milestoneId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Projects.AssignmentsModel
+@{
+    ViewData["Title"] = "Milestone assignments";
+    var hasOwners = Model.Details.IsTeamProject
+        ? Model.Details.Teams.Count > 0
+        : Model.Details.Candidates.Count > 0;
+}
+
+<h1>Milestone assignments</h1>
+
+<p>
+    Project: <strong>@Model.Details.ProjectTitle</strong><br />
+    Milestone: <strong>@Model.Details.MilestoneTitle</strong>
+</p>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+@if (!Model.Details.CanManage)
+{
+    <div class="alert alert-info">
+        Assignments cannot be created for this archived or unsupported project.
+        Existing assignments remain visible.
+    </div>
+}
+else if (!hasOwners)
+{
+    <p>
+        No eligible unassigned @(Model.Details.IsTeamProject ? "teams" : "candidates")
+        are available for this milestone.
+    </p>
+}
+else
+{
+    <h2>Create assignment</h2>
+
+    <form method="post"
+          asp-route-milestoneId="@Model.Details.MilestoneId"
+          class="mb-4">
+
+        @if (Model.Details.IsTeamProject)
+        {
+            <div class="mb-3">
+                <label asp-for="TeamId" class="form-label">Team</label>
+                <select asp-for="TeamId" class="form-select" required>
+                    <option value="">Select a team</option>
+                    @foreach (var team in Model.Details.Teams)
+                    {
+                        <option value="@team.TeamId">@team.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="TeamId" class="text-danger"></span>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label asp-for="CandidateId" class="form-label">Candidate</label>
+                <select asp-for="CandidateId" class="form-select" required>
+                    <option value="">Select a candidate</option>
+                    @foreach (var candidate in Model.Details.Candidates)
+                    {
+                        <option value="@candidate.UserId">
+                            @candidate.UserName
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="CandidateId"
+                      class="text-danger"></span>
+            </div>
+        }
+
+        <div class="mb-3">
+            <label asp-for="DueLocal" class="form-label">
+                Deadline — South African time (UTC+02:00)
+            </label>
+            <input asp-for="DueLocal"
+                   type="datetime-local"
+                   step="60"
+                   class="form-control"
+                   required />
+            <span asp-validation-for="DueLocal" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="IsRequired" class="form-check-input" />
+            <label asp-for="IsRequired" class="form-check-label">
+                Required assignment
+            </label>
+        </div>
+
+        <p class="text-muted">
+            This assignment will preserve the milestone's current instructions,
+            acceptance expectations, and evidence requirements.
+        </p>
+
+        <button type="submit" class="btn btn-primary">
+            Create assignment
+        </button>
+    </form>
+}
+
+<h2>Existing assignments</h2>
+
+@if (Model.Details.Assignments.Count == 0)
+{
+    <p>No assignments have been created for this milestone.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">
+                        @(Model.Details.IsTeamProject ? "Team" : "Candidate")
+                    </th>
+                    <th scope="col">Deadline (SAST)</th>
+                    <th scope="col">Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assignment in Model.Details.Assignments)
+                {
+                    <tr>
+                        <td>@assignment.OwnerName</td>
+                        <td>
+                            @assignment.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm")
+                        </td>
+                        <td>@(assignment.IsRequired ? "Yes" : "No")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a asp-page="./Milestones"
+   asp-route-projectId="@Model.Details.ProjectId"
+   class="btn btn-secondary">
+    Back to milestones
+</a>
