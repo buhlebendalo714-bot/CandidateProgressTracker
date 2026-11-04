@@ -85,6 +85,10 @@ internal sealed class TestDatabase : IAsyncDisposable
             IMemberCycleQueryService, 
             MemberCycleQueryService>();
 
+        services.AddScoped<
+            IProjectTeamService, 
+            ProjectTeamService>();
+
         var database = new TestDatabase(
             services.BuildServiceProvider(
                 new ServiceProviderOptions
