@@ -89,6 +89,10 @@ internal sealed class TestDatabase : IAsyncDisposable
             IProjectTeamService, 
             ProjectTeamService>();
 
+        services.AddScoped<
+            IMilestoneAssignmentService, 
+            MilestoneAssignmentService>();
+
         var database = new TestDatabase(
             services.BuildServiceProvider(
                 new ServiceProviderOptions
