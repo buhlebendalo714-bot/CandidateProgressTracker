@@ -130,7 +130,24 @@ else
                 @foreach (var assignment in Model.Details.Assignments)
                 {
                     <tr>
-                        <td>@assignment.OwnerName</td>
+                        <td>
+                            @assignment.OwnerName
+
+                            <a asp-page="./AssignmentHistory"
+                               asp-route-assignmentId="@assignment.AssignmentId"
+                               class="ms-2">
+                                History
+                            </a>
+
+                            @if (Model.Details.CanManage)
+                            {
+                                <a asp-page="./ReviseAssignment"
+                                   asp-route-assignmentId="@assignment.AssignmentId"
+                                   class="ms-2">
+                                    Revise
+                                </a>
+                            }
+                        </td>
                         <td>
                             @assignment.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm")
                         </td>

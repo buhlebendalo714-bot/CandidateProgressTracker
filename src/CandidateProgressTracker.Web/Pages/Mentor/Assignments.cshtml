@@ -1,0 +1,17 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Mentor.AssignmentsModel
+@{
+    ViewData["Title"] = "Cohort assignments";
+}
+
+<h1>Cohort assignments</h1>
+<p>
+    Assignments in your currently assigned cohorts.
+    All deadlines are shown in South African time.
+</p>
+
+<partial name="_MemberAssignments" model="Model.Assignments" />
+
+<a asp-page="./Index" class="btn btn-secondary mt-3">
+    Back to my cohorts
+</a>

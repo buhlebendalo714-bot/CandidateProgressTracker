@@ -1,0 +1,109 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Projects.AssignmentHistoryModel
+@{
+    ViewData["Title"] = "Assignment history";
+}
+
+<h1>Assignment history</h1>
+
+<p>
+    Milestone: <strong>@Model.History.MilestoneTitle</strong><br />
+    Assigned to: <strong>@Model.History.OwnerName</strong>
+</p>
+
+<p class="text-muted">
+    Newest revisions first. All times are South African time (UTC+02:00).
+    Usernames reflect the current account name; user IDs identify the recorded actor.
+</p>
+
+@if (Model.History.IsArchived)
+{
+    <div class="alert alert-info">
+        This assignment belongs to an archived project, cycle, or cohort.
+        Its revision history remains available.
+    </div>
+}
+
+@if (Model.History.Revisions.Count == 0)
+{
+    <p>No revisions are available on this page.</p>
+}
+else
+{
+    @foreach (var revision in Model.History.Revisions)
+    {
+        <section class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Revision @revision.RevisionNo</h2>
+
+                <dl class="row">
+                    <dt class="col-sm-3">Recorded</dt>
+                    <dd class="col-sm-9">
+                        @revision.ChangedAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss")
+                    </dd>
+
+                    <dt class="col-sm-3">Changed by</dt>
+                    <dd class="col-sm-9">
+                        @revision.ChangedByName
+                        <div class="small text-muted">
+                            User ID: @revision.ChangedBy
+                        </div>
+                    </dd>
+
+                    <dt class="col-sm-3">Deadline</dt>
+                    <dd class="col-sm-9">
+                        @revision.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss")
+                    </dd>
+
+                    <dt class="col-sm-3">Reason</dt>
+                    <dd class="col-sm-9"
+                        style="white-space: pre-wrap; overflow-wrap: anywhere;">@revision.Reason</dd>
+                </dl>
+
+                <details>
+                    <summary>View requirements for this revision</summary>
+
+                    <h3 class="h6 mt-3">Instructions</h3>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@revision.Instructions</div>
+
+                    <h3 class="h6 mt-3">Acceptance expectations</h3>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@revision.AcceptanceExpectations</div>
+
+                    <h3 class="h6 mt-3">Evidence requirements</h3>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@revision.EvidencePolicy</div>
+                </details>
+            </div>
+        </section>
+    }
+}
+
+<nav aria-label="Revision history pages"
+     class="d-flex align-items-center gap-3 mb-3">
+    @if (Model.History.PageNumber > 1)
+    {
+        <a asp-page="./AssignmentHistory"
+           asp-route-assignmentId="@Model.History.AssignmentId"
+           asp-route-pageNumber="@(Model.History.PageNumber - 1)"
+           class="btn btn-outline-secondary">
+            Previous
+        </a>
+    }
+
+    <span>Page @Model.History.PageNumber</span>
+
+    @if (Model.History.HasNextPage)
+    {
+        <a asp-page="./AssignmentHistory"
+           asp-route-assignmentId="@Model.History.AssignmentId"
+           asp-route-pageNumber="@(Model.History.PageNumber + 1)"
+           class="btn btn-outline-secondary">
+            Next
+        </a>
+    }
+</nav>
+
+<a asp-page="./Assignments"
+   asp-route-milestoneId="@Model.History.MilestoneId"
+   class="btn btn-secondary">
+    Back to assignments
+</a>

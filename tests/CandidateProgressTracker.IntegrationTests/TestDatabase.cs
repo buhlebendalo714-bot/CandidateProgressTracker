@@ -93,6 +93,18 @@ internal sealed class TestDatabase : IAsyncDisposable
             IMilestoneAssignmentService, 
             MilestoneAssignmentService>();
 
+        services.AddScoped<
+            IMemberAssignmentQueryService,
+            MemberAssignmentQueryService>();
+
+        services.AddScoped<
+            IAssignmentRevisionService,
+            AssignmentRevisionService>();
+
+        services.AddScoped<
+            IAssignmentHistoryQueryService,
+            AssignmentHistoryQueryService>();
+
         var database = new TestDatabase(
             services.BuildServiceProvider(
                 new ServiceProviderOptions

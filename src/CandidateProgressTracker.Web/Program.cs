@@ -86,6 +86,12 @@ builder.Services.AddScoped<IProjectTeamService, ProjectTeamService>();
 
 builder.Services.AddScoped<IMilestoneAssignmentService, MilestoneAssignmentService>();
 
+builder.Services.AddScoped<IMemberAssignmentQueryService, MemberAssignmentQueryService>();
+
+builder.Services.AddScoped<IAssignmentRevisionService, AssignmentRevisionService>();
+
+builder.Services.AddScoped<IAssignmentHistoryQueryService, AssignmentHistoryQueryService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

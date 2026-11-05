@@ -1,0 +1,108 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Projects.ReviseAssignmentModel
+@{
+    ViewData["Title"] = "Revise assignment";
+}
+
+<h1>Revise assignment</h1>
+
+<p>
+    Milestone: <strong>@Model.Details.MilestoneTitle</strong><br />
+    Current saved revision: @Model.Details.RevisionNo
+</p>
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert"></div>
+
+@if (!Model.Details.CanManage)
+{
+    <div class="alert alert-info">
+        This assignment belongs to an archived project, cycle, or cohort.
+        Revisions are unavailable.
+    </div>
+}
+else
+{
+    <p>
+        Saving creates a new revision for this assignment.
+        Earlier requirements and deadlines remain in its history.
+    </p>
+
+    <form method="post"
+          asp-route-assignmentId="@Model.Details.AssignmentId"
+          class="mb-4">
+        <input asp-for="Input.RowVersion" type="hidden" />
+
+        <div class="mb-3">
+            <label asp-for="Input.DueLocal" class="form-label"></label>
+            <input asp-for="Input.DueLocal"
+                   type="datetime-local"
+                   step="any"
+                   class="form-control" />
+            <span asp-validation-for="Input.DueLocal"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Instructions" class="form-label"></label>
+            <textarea asp-for="Input.Instructions"
+                      class="form-control"
+                      rows="5"
+                      maxlength="10000"></textarea>
+            <span asp-validation-for="Input.Instructions"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.AcceptanceExpectations"
+                   class="form-label"></label>
+            <textarea asp-for="Input.AcceptanceExpectations"
+                      class="form-control"
+                      rows="4"
+                      maxlength="10000"></textarea>
+            <span asp-validation-for="Input.AcceptanceExpectations"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.EvidencePolicy" class="form-label"></label>
+            <textarea asp-for="Input.EvidencePolicy"
+                      class="form-control"
+                      rows="3"
+                      maxlength="2000"></textarea>
+            <span asp-validation-for="Input.EvidencePolicy"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Reason" class="form-label"></label>
+            <textarea asp-for="Input.Reason"
+                      class="form-control"
+                      rows="3"
+                      maxlength="1000"></textarea>
+            <span asp-validation-for="Input.Reason"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Save new revision
+        </button>
+
+        <a asp-page="./ReviseAssignment"
+           asp-route-assignmentId="@Model.Details.AssignmentId"
+           class="btn btn-outline-secondary">
+            Reload saved values
+        </a>
+    </form>
+}
+
+<a asp-page="./Assignments"
+   asp-route-milestoneId="@Model.Details.MilestoneId"
+   class="btn btn-secondary">
+    Back to assignments
+</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
