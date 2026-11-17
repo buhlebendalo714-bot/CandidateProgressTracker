@@ -31,46 +31,24 @@ public class AssignmentHistoryQueryService : IAssignmentHistoryQueryService
             from userRole in _db.UserRoles
             join role in _db.Roles
                 on userRole.RoleId equals role.Id
-            where role.NormalizedName == "ADMINISTRATOR"
+            where role.NormalizedName == "ADMINISTRATOR" && !_db.AccountAccessStates.Any(s => s.UserId == userRole.UserId && !s.Enabled)
             select userRole.UserId;
 
-        var header = await (
-            from assignment in _db.Assignments.AsNoTracking()
-            join milestone in _db.Milestones.AsNoTracking()
-                on assignment.MilestoneId equals milestone.MilestoneId
-            join project in _db.Projects.AsNoTracking()
-                on assignment.ProjectId equals project.ProjectId
-            join cycle in _db.LearningCycles.AsNoTracking()
-                on project.CycleId equals cycle.CycleId
-            join cohort in _db.Cohorts.AsNoTracking()
-                on cycle.CohortId equals cohort.CohortId
-            where assignment.AssignmentId == assignmentId &&
-                administrators.Contains(actorUserId)
-            select new
-            {
-                assignment.AssignmentId,
-                milestone.MilestoneId,
-                MilestoneTitle = milestone.Title,
-                IsArchived =
-                    project.IsArchived ||
-                    cycle.IsArchived ||
-                    cohort.IsArchived,
-                OwnerName = assignment.CandidateId != null
-                    ? (_db.Users
-                        .Where(user => user.Id == assignment.CandidateId)
-                        .Select(user => user.UserName)
-                        .FirstOrDefault() ?? "(No username)")
-                    : (_db.ProjectTeams
-                        .Where(team => team.TeamId == assignment.TeamId)
-                        .Select(team => team.Name)
-                        .FirstOrDefault() ?? "(Unknown team)")
-            })
-            .SingleOrDefaultAsync();
+        if (!await administrators.ContainsAsync(actorUserId)) return null;
+        var assignment = await _db.Assignments.AsNoTracking().SingleOrDefaultAsync(a => a.AssignmentId == assignmentId);
+        if (assignment is null) return null;
+        var cycle = await _db.LearningCycles.AsNoTracking().SingleAsync(c => c.CycleId == assignment.CycleId);
+        var cohort = await _db.Cohorts.AsNoTracking().SingleAsync(c => c.CohortId == cycle.CohortId);
+        var title = assignment.OfferingId is not null
+            ? await _db.CourseOfferings.Where(o => o.OfferingId == assignment.OfferingId).Select(o => o.TitleSnapshot).SingleAsync()
+            : await _db.Milestones.Where(m => m.MilestoneId == assignment.MilestoneId).Select(m => m.Title).SingleAsync();
+        var projectArchived = assignment.ProjectId is not null && await _db.Projects.AnyAsync(p => p.ProjectId == assignment.ProjectId && p.IsArchived);
+        var owner = assignment.CandidateId is not null
+            ? await _db.Users.Where(u => u.Id == assignment.CandidateId).Select(u => u.UserName).SingleAsync()
+            : await _db.ProjectTeams.Where(t => t.TeamId == assignment.TeamId).Select(t => t.Name).SingleAsync();
+        var header = new { assignment.AssignmentId, MilestoneId = assignment.MilestoneId ?? Guid.Empty, MilestoneTitle = title,
+            IsArchived = projectArchived || cycle.IsArchived || cohort.IsArchived, OwnerName = owner ?? "(No username)" };
 
-        if (header is null)
-        {
-            return null;
-        }
 
         var revisions = await (
             from revision in _db.AssignmentRevisions.AsNoTracking()
@@ -101,6 +79,6 @@ public class AssignmentHistoryQueryService : IAssignmentHistoryQueryService
             header.IsArchived,
             revisions.Take(PageSize).ToList(),
             pageNumber,
-            revisions.Count > PageSize);
+            revisions.Count > PageSize) { CycleId = assignment.CycleId };
     }
 }

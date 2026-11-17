@@ -116,7 +116,7 @@ public class EndMembershipModel : PageModel
             return Page();
         }
 
-        TempData["SuccessMessage"] = "Membership ended successfully.";
+        TempData["SuccessMessage"] = "Cohort membership ended. Previous work and membership history are retained.";
 
         return RedirectToPage("./Members", new { id = cohortId });
     }
@@ -125,7 +125,7 @@ public class EndMembershipModel : PageModel
         Guid cohortId,
         Guid membershipId)
     {
-        var details = await _queryService.GetAsync(cohortId);
+        var details = await _queryService.GetAsync(cohortId, User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
 
         if (details is null)
         {

@@ -1,0 +1,67 @@
+@model CandidateProgressTracker.Application.Learning.SubmissionHistoryPage
+@if (Model.Roster is not null)
+{
+    <h2 class="h5">Recorded team members — @Model.Roster.TeamName</h2>
+    <details><summary>When these members were recorded</summary><p>Recorded @Model.Roster.FrozenAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss") SAST by @Model.Roster.FrozenBy.</p></details>
+    <p>Shared assignment credit does not prove each member's individual contribution.</p>
+    <ul>@foreach (var member in Model.Roster.Members) { <li>@member.UserName</li> }</ul>
+}
+@if (Model.Attempts.Count == 0)
+{
+    <p>No submissions on this page. Submit your evidence from the assignment when it is ready.</p>
+}
+@foreach (var attempt in Model.Attempts)
+{
+    <section class="card my-3 attempt-panel">
+        <div class="card-body">
+            <h2 class="h5">Attempt @attempt.AttemptNo</h2>
+            <dl class="receipt-metadata">
+                <dt>Receipt reference</dt><dd><details><summary>Show receipt reference</summary>@attempt.ReceiptId</details></dd>
+                @if (attempt.SubmitterName is not null) { <dt>Submitted by</dt><dd>@attempt.SubmitterName</dd> }
+                <dt>Received (SAST)</dt><dd>@attempt.ReceivedAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss.fffffff") SAST</dd>
+                <dt>Submission timing</dt><dd>@(attempt.IsLate ? "Late" : "On time")</dd>
+                <dt>Assignment revision</dt><dd>@attempt.RevisionNo <details><summary>Revision reference</summary>@attempt.RevisionId</details></dd>
+                <dt>Saved deadline (SAST)</dt><dd>@attempt.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss.fffffff") SAST</dd>
+            </dl>
+            <h3 class="h6">Explanation</h3>
+            <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@attempt.Explanation</div>
+            <h3 class="h6">Evidence</h3>
+            <ul>
+                @foreach (var evidence in attempt.Evidence)
+                {
+                    <li>
+                        @if (evidence.IsClickable)
+                        {
+                            <a href="@evidence.Url" rel="noopener noreferrer">@evidence.Label</a>
+                        }
+                        else
+                        {
+                            <span>@evidence.Label — @evidence.Url</span>
+                        }
+                    </li>
+                }
+            </ul>
+            @foreach (var file in attempt.Files)
+            {
+                <p><a asp-page="/Evidence/Download" asp-route-fileId="@file.FileId">Download @file.Name</a> (@UserText.FileSize(file.SizeBytes))</p>
+            }
+            @if (ViewData["SeparateReviewRequirements"] is not true) { <partial name="_ReviewEvents" model="attempt" /> }
+            @if (ViewData["SeparateReviewRequirements"] is not true) { <partial name="_SavedRequirements" model="attempt" /> }
+        </div>
+    </section>
+}
+@if (ViewData["SeparateReviewRequirements"] is not true)
+{
+<nav aria-label="Submission history pages" class="d-flex gap-3">
+    @if (Model.PageNumber > 1)
+    {
+        <a asp-route-assignmentId="@Model.AssignmentId" asp-route-pageNumber="@(Model.PageNumber - 1)">Previous</a>
+    }
+    <span>Page @Model.PageNumber</span>
+    @if (Model.HasNextPage)
+    {
+        <a asp-route-assignmentId="@Model.AssignmentId" asp-route-pageNumber="@(Model.PageNumber + 1)">Next</a>
+    }
+</nav>
+
+}

@@ -731,7 +731,7 @@ public class AssignmentRevisionTests
                 .GetRequiredService<IMilestoneAssignmentService>();
 
             var created = await assignments.CreateAsync(
-                milestoneId,
+                milestoneId!.Value,
                 candidateId,
                 null,
                 DateTimeOffset.UtcNow.AddDays(7),

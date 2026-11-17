@@ -156,6 +156,7 @@ public class ReviseAssignmentModel : PageModel
         {
             TempData["SuccessMessage"] = "Assignment revision saved.";
 
+            if (Details.MilestoneId == Guid.Empty) return RedirectToPage("./AssignmentHistory", new { assignmentId });
             return RedirectToPage(
                 "./Assignments",
                 new { milestoneId = Details.MilestoneId });

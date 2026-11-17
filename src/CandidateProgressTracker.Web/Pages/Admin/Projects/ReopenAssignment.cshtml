@@ -1,0 +1,26 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Projects.ReopenAssignmentModel
+@using CandidateProgressTracker.Application.Learning
+@{
+    ViewData["Title"] = "Reopen assignment";
+}
+<h1>Reopen assignment</h1>
+<p>Assignment owner: @Model.Details.CandidateName</p>
+<p>@Model.Details.Eligibility</p>
+@if (TempData["ReopenSuccess"] is string success) { <p class="alert alert-success" role="status" aria-atomic="true">@success</p> }
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+@if (Model.Details.Attempt is not null)
+{
+    <partial name="_SubmissionHistory" model="@(new SubmissionHistoryPage(Model.Details.AssignmentId, "", "", 1, false, new[] { Model.Details.Attempt }) { Roster = Model.Details.Roster })" />
+}
+@if (Model.Details.EffectiveApprovalId is not null)
+{
+    <form class="workspace-panel management-form" method="post">
+        <input type="hidden" asp-for="Input.ApprovalReviewId" />
+        <input type="hidden" asp-for="Input.RowVersion" />
+        <input type="hidden" asp-for="Input.RequestId" />
+        <label asp-for="Input.Reason">Reopening reason (required; maximum 1,000 characters)</label>
+        <textarea asp-for="Input.Reason" maxlength="1000" class="form-control"></textarea>
+        <button type="submit" class="btn btn-primary mt-3">Reopen approval</button>
+    </form>
+}

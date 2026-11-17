@@ -14,7 +14,7 @@
 
 @if (TempData["SuccessMessage"] is string message)
 {
-    <div class="alert alert-success" role="status">@message</div>
+    <div class="alert alert-success" role="status" aria-atomic="true">@message</div>
 }
 
 <div asp-validation-summary="ModelOnly"
@@ -28,7 +28,8 @@
 }
 else
 {
-    <h2>Assign a member</h2>
+    <p><a asp-page="./BulkOnboard" asp-route-id="@Model.Details.CohortId">Bulk onboard candidates</a></p>
+    <h2>Add a member</h2>
 
     @if (Model.Details.EligibleMembers.Count == 0)
     {
@@ -38,7 +39,7 @@ else
     {
         <div class="row mb-4">
             <div class="col-md-6">
-                <form method="post"
+                <form class="workspace-panel management-form" method="post"
                       asp-route-id="@Model.Details.CohortId">
 
                     <div class="mb-3">

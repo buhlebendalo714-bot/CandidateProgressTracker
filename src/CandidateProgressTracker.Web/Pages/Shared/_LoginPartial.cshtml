@@ -1,22 +1,3 @@
-<ul class="navbar-nav">
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <li class="nav-item">
-            <span class="navbar-text me-3">@User.Identity.Name</span>
-        </li>
-        <li class="nav-item">
-            <form method="post" asp-page="/Account/Logout" asp-area="">
-                <button type="submit" class="nav-link btn btn-link text-dark">
-                    Log out
-                </button>
-            </form>
-        </li>
-    }
-    else
-    {
-        <li class="nav-item">
-            <a class="nav-link text-dark"
-               asp-page="/Account/Login" asp-area="">Log in</a>
-        </li>
-    }
-</ul>
+@if(User.Identity?.IsAuthenticated==true){
+<details class="account-menu"><summary><span class="account-avatar" aria-hidden="true">@(User.Identity.Name?.FirstOrDefault().ToString().ToUpperInvariant()??"U")</span><span class="account-name">@User.Identity.Name</span><span class="account-chevron" aria-hidden="true">&#8964;</span><span class="visually-hidden">Account controls</span></summary><div class="account-dropdown"><span>Signed in as</span><strong>@User.Identity.Name</strong><form method="post" asp-page="/Account/Logout" asp-area=""><button type="submit" class="btn btn-outline-secondary">Log out</button></form></div></details>
+}else{<a class="btn btn-outline-primary" asp-page="/Account/Login">Log in</a>}

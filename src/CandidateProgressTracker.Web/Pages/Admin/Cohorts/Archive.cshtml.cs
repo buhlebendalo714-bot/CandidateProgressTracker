@@ -43,7 +43,7 @@ public class ArchiveModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(Guid id)
     {
-        var cohort = await _queryService.GetAsync(id);
+        var cohort = await _queryService.GetAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
 
         if (cohort is null)
         {
@@ -60,7 +60,7 @@ public class ArchiveModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(Guid id)
     {
-        var cohort = await _queryService.GetAsync(id);
+        var cohort = await _queryService.GetAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
 
         if (cohort is null)
         {

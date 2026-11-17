@@ -1,0 +1,15 @@
+@{
+    var page=ViewContext.RouteData.Values["page"]?.ToString()??"";
+    string? Current(params string[] pages)=>pages.Any(p=>page==p||p.EndsWith("/")&&page.StartsWith(p,StringComparison.OrdinalIgnoreCase))?"page":null;
+}
+@if(User.IsInRole("Candidate")){
+<div class="nav-group"><p>Learning</p><a asp-page="/Candidate/Index" aria-current="@Current("/Candidate/Index")"><span class="nav-symbol" aria-hidden="true">&#9638;</span>Overview</a><a asp-page="/Candidate/Courses" aria-current="@Current("/Candidate/Courses")"><span class="nav-symbol" aria-hidden="true">&#9776;</span>Courses &amp; certificates</a><a asp-page="/Candidate/Assignments" aria-current="@Current("/Candidate/Assignments")"><span class="nav-symbol" aria-hidden="true">&#9633;</span>Projects &amp; milestones</a></div>
+<div class="nav-group"><p>Your record</p><a asp-page="/Candidate/Index" asp-fragment="submission-history" aria-current="@Current("/Candidate/SubmissionHistory","/Candidate/TeamSubmissionHistory")">Submission history</a><a asp-page="/Candidate/Progress" aria-current="@Current("/Candidate/Progress")">Progress details</a><a asp-page="/Candidate/Index" asp-fragment="learning-context" aria-current="@Current("/Candidate/Cycles")">Learning cycles</a></div>
+}
+@if(User.IsInRole("Mentor")){
+<div class="nav-group"><p>Mentoring</p><a asp-page="/Mentor/Index" aria-current="@Current("/Mentor/Index")">Mentor workspace</a><a asp-page="/Mentor/ReviewQueue" aria-current="@Current("/Mentor/ReviewQueue","/Mentor/ReviewSubmission")">Review submissions</a><a asp-page="/Mentor/Progress" aria-current="@Current("/Mentor/Progress")">Learner progress</a><a asp-page="/Mentor/Courses" aria-current="@Current("/Mentor/Courses")">Course work</a><a asp-page="/Mentor/Assignments" aria-current="@Current("/Mentor/Assignments","/Mentor/SubmissionHistory")">Project work</a></div>
+}
+@if(User.IsInRole("Administrator")){
+<div class="nav-group"><p>Workspace</p><a asp-page="/Admin/Index" aria-current="@Current("/Admin/Index")">Administration</a></div><div class="nav-group"><p>People</p><a asp-page="/Admin/Users/Index" aria-current="@Current("/Admin/Users/")">People &amp; access</a></div><div class="nav-group"><p>Learning</p><a asp-page="/Admin/Cohorts/Index" aria-current="@Current("/Admin/Cohorts/","/Admin/Projects/","/Admin/Courses/")">Set up learning</a></div>
+<div class="nav-group"><p>Governance</p><a asp-page="/Admin/Archives" aria-current="@Current("/Admin/Archives","/Admin/SubmissionHistory")">Archive &amp; history</a><a asp-page="/Admin/Audit" aria-current="@Current("/Admin/Audit")">Audit history</a></div>
+}

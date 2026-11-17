@@ -1,0 +1,10 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Candidate.CreditedTeamHistoryModel
+<h1>My credited assignments in current teams</h1>
+<p>History requires current Candidate role, current cohort membership, and current membership in the assigned team. Historical credit alone grants no access. Later joiners can read shared history through My assignments.</p>
+<ul>
+@foreach (var item in Model.Assignments)
+{
+    <li><a asp-page="./TeamSubmissionHistory" asp-route-assignmentId="@item.AssignmentId">@item.TeamName / @item.MilestoneTitle</a></li>
+}
+</ul>

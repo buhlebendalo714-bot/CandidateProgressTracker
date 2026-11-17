@@ -1,0 +1,119 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Candidate.SubmitModel
+@{
+    ViewData["Title"] = "Submit assignment evidence";
+}
+
+<h1>Submit assignment evidence</h1>
+
+<div class="assignment-workspace">
+<aside class="workspace-context"><h2 class="h5">Assignment context</h2>
+<p>
+    Project: <strong>@Model.Details.ProjectTitle</strong><br />
+    Milestone: <strong>@Model.Details.MilestoneTitle</strong><br />
+    Requirements revision: <strong>@Model.Details.RevisionNo</strong><br />
+    Deadline (SAST):
+    <strong>
+        @Model.Details.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm")
+    </strong>
+</p>
+
+<a asp-page="./SubmissionHistory" asp-route-assignmentId="@Model.Details.AssignmentId">Submission history and feedback</a></aside>
+<div class="workspace-main">
+@if (TempData["SubmissionSuccess"] is string success)
+{
+    <div class="alert alert-success" role="status" aria-atomic="true">
+        @success
+    </div>
+
+    <a asp-page="./Assignments" class="btn btn-secondary">
+        Back to assignments
+    </a>
+}
+else
+{
+    <div asp-validation-summary="All"
+         class="text-danger"
+         role="alert"></div>
+
+    @if (Model.RequirementsChanged)
+    {
+        <div class="alert alert-warning" role="alert">
+            The assignment requirements changed after you opened this form.
+            Copy any work you want to keep, then
+            <a asp-page="./Submit"
+               asp-route-assignmentId="@Model.Details.AssignmentId">
+                reload the form
+            </a>
+            and review the current requirements before submitting.
+        </div>
+    }
+
+    <section class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Assigned requirements</h2>
+
+            <h3 class="h6">Instructions</h3>
+            <div class="mb-3"
+                 style="white-space: pre-wrap; overflow-wrap: anywhere;">@Model.Details.Instructions</div>
+
+            <h3 class="h6">Acceptance expectations</h3>
+            <div class="mb-3"
+                 style="white-space: pre-wrap; overflow-wrap: anywhere;">@Model.Details.AcceptanceExpectations</div>
+
+            <h3 class="h6">Evidence requirements</h3>
+            <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@Model.Details.EvidencePolicy</div>
+        </div>
+    </section>
+
+    <form class="workspace-panel evidence-form" method="post" enctype="multipart/form-data"
+          asp-route-assignmentId="@Model.Details.AssignmentId">
+        <input type="hidden" asp-for="Input.RevisionId" />
+<label for="Files">Files (PDF, PNG or JPEG; up to 5 files, 10 MB each)</label>
+<input type="file" name="Files" id="Files" accept=".pdf,.png,.jpg,.jpeg" multiple />
+<p>Courses require a certificate file. Use files, secure web links or both for project evidence. Files are checked before the submission is saved.</p>
+        <input type="hidden" asp-for="Input.RequestId" />
+
+        <div class="mb-4">
+            <label asp-for="Input.Explanation" class="form-label">
+                Explain your submission
+            </label>
+            <textarea asp-for="Input.Explanation"
+                      class="form-control"
+                      rows="6"
+                      maxlength="10000"
+                      required></textarea>
+            <span asp-validation-for="Input.Explanation"
+                  class="text-danger"></span>
+        </div>
+
+        <h2 class="h5">Evidence links</h2>
+        <p>
+            For project work, add files or at least one HTTPS link. Give each link a descriptive label.
+            Ensure your reviewer has permission to open it.
+        </p>
+
+        <partial name="_EvidenceLinks" model="Model.Input.Evidence.Count" />
+
+        <p class="text-muted">
+            Submitting records a new attempt. Earlier attempts are retained.
+            Late submissions are accepted and their receipt time is recorded.
+        </p>
+
+        <button type="submit" class="btn btn-primary">
+            Submit evidence
+        </button>
+
+        <a asp-page="./Assignments" class="btn btn-secondary">
+            Back to assignments
+        </a>
+    </form>
+}
+
+</div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/evidence-links.js" asp-append-version="true"></script>
+}
+<p><a asp-page="./Courses">My courses and certificates</a></p>

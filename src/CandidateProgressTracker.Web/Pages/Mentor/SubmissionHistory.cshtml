@@ -1,0 +1,11 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Mentor.SubmissionHistoryModel
+@{
+    ViewData["Title"] = "Submission history";
+}
+<h1>Submission history</h1>
+<p>Assignment owner: @Model.History.CandidateName</p>
+<p>@Model.History.ProjectTitle / @Model.History.MilestoneTitle</p>
+<a asp-page="/Mentor/Assignments">Back to assignments</a>
+<a asp-page="./ReviewSubmission" asp-route-assignmentId="@Model.History.AssignmentId" class="btn btn-primary">Review latest attempt</a>
+<partial name="_SubmissionHistory" model="Model.History" />

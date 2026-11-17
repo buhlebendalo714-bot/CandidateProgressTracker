@@ -41,6 +41,10 @@ internal sealed class AccessWebFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        // Resolve the compiled scoped-CSS bundle as the local Development host does.
+        builder.UseStaticWebAssets();
+        // Many independent HTTP cases share this isolated test host/IP.
+        builder.UseSetting("Authentication:RequestsPerMinute", "10000");
 
         builder.UseSetting(
             "ConnectionStrings:DefaultConnection",
@@ -270,7 +274,7 @@ public sealed class WebAccessFixture : IAsyncLifetime
         MilestoneId = milestone.MilestoneId;
     }
 
-    public async Task<HttpClient> CreateClientAsync(string? role = null)
+    public async Task<HttpClient> CreateClientAsync(string? role = null, string? userId = null)
     {
         if (_factory is null)
         {
@@ -297,7 +301,7 @@ public sealed class WebAccessFixture : IAsyncLifetime
             var users = scope.ServiceProvider
                 .GetRequiredService<UserManager<IdentityUser>>();
 
-            var user = await users.FindByIdAsync(_userIds[role])
+            var user = await users.FindByIdAsync(userId ?? _userIds[role])
                 ?? throw new InvalidOperationException("Test user is missing.");
 
             var principalFactory = scope.ServiceProvider

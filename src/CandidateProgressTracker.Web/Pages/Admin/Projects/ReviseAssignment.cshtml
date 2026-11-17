@@ -7,7 +7,7 @@
 <h1>Revise assignment</h1>
 
 <p>
-    Milestone: <strong>@Model.Details.MilestoneTitle</strong><br />
+    Assignment: <strong>@Model.Details.MilestoneTitle</strong><br />
     Current saved revision: @Model.Details.RevisionNo
 </p>
 
@@ -31,7 +31,7 @@ else
 
     <form method="post"
           asp-route-assignmentId="@Model.Details.AssignmentId"
-          class="mb-4">
+          class="workspace-panel management-form mb-4">
         <input asp-for="Input.RowVersion" type="hidden" />
 
         <div class="mb-3">
@@ -97,11 +97,17 @@ else
     </form>
 }
 
+@if (Model.Details.MilestoneId == Guid.Empty)
+{ <a asp-page="/Admin/Courses/Index" asp-route-cycleId="@Model.Details.CycleId">Back to course assignments</a> }
+else
+{
 <a asp-page="./Assignments"
    asp-route-milestoneId="@Model.Details.MilestoneId"
    class="btn btn-secondary">
     Back to assignments
 </a>
+}
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

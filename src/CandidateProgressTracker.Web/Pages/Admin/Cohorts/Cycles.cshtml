@@ -9,7 +9,7 @@
 
 @if (TempData["SuccessMessage"] is string message)
 {
-    <div class="alert alert-success" role="status">@message</div>
+    <div class="alert alert-success" role="status" aria-atomic="true">@message</div>
 }
 
 <div asp-validation-summary="All"
@@ -28,7 +28,7 @@ else
 
     <form method="post"
           asp-route-id="@Model.Cohort.CohortId"
-          class="mb-4">
+          class="workspace-panel management-form mb-4">
         <div class="mb-3">
             <label asp-for="Input.Name" class="form-label"></label>
             <input asp-for="Input.Name"
@@ -79,6 +79,7 @@ else
                     <th scope="col">Name</th>
                     <th scope="col">Start date</th>
                     <th scope="col">End date</th>
+                    <th scope="col">Courses</th>
                     <th scope="col">Archive status</th>
                 </tr>
             </thead>
@@ -92,6 +93,7 @@ else
                                 @cycle.Name
                             </a>
                         </td>
+                        <td><a asp-page="/Admin/Courses/Index" asp-route-cycleId="@cycle.CycleId">Courses</a></td>
                         <td>@cycle.StartsOn.ToString("yyyy-MM-dd")</td>
                         <td>@cycle.EndsOn.ToString("yyyy-MM-dd")</td>
                         <td>@(cycle.IsArchived ? "Archived" : "Not archived")</td>

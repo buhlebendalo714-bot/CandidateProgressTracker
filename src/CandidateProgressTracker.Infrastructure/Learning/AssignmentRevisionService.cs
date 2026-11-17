@@ -23,7 +23,7 @@ public class AssignmentRevisionService : IAssignmentRevisionService
     private record Parent(
         Guid MilestoneId,
         string Title,
-        bool IsArchived);
+        bool IsArchived, Guid CycleId);
 
     private static AssignmentRevisionResult Failure(string message) =>
         new(false, new[] { message });
@@ -38,27 +38,27 @@ public class AssignmentRevisionService : IAssignmentRevisionService
         var user = await _users.FindByIdAsync(actorId);
 
         return user is not null &&
-            await _users.IsInRoleAsync(user, "Administrator");
+            (await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, user.Id) && await _users.IsInRoleAsync(user, "Administrator"));
     }
 
     private Task<Parent?> GetParentAsync(Guid assignmentId)
     {
-        return (
-            from assignment in _db.Assignments.AsNoTracking()
-            join milestone in _db.Milestones.AsNoTracking()
-                on assignment.MilestoneId equals milestone.MilestoneId
-            join project in _db.Projects.AsNoTracking()
-                on assignment.ProjectId equals project.ProjectId
-            join cycle in _db.LearningCycles.AsNoTracking()
-                on project.CycleId equals cycle.CycleId
-            join cohort in _db.Cohorts.AsNoTracking()
-                on cycle.CohortId equals cohort.CohortId
-            where assignment.AssignmentId == assignmentId
-            select new Parent(
-                milestone.MilestoneId,
-                milestone.Title,
-                project.IsArchived || cycle.IsArchived || cohort.IsArchived))
-            .SingleOrDefaultAsync();
+        return GetParentCoreAsync(assignmentId);
+    }
+    private async Task<Parent?> GetParentCoreAsync(Guid id)
+    {
+        var a = await _db.Assignments.AsNoTracking().SingleOrDefaultAsync(a => a.AssignmentId == id);
+        if (a is null) return null;
+        var c = await _db.LearningCycles.AsNoTracking().SingleAsync(c => c.CycleId == a.CycleId);
+        var h = await _db.Cohorts.AsNoTracking().SingleAsync(h => h.CohortId == c.CohortId);
+        if (a.OfferingId is not null)
+        {
+            var o = await _db.CourseOfferings.AsNoTracking().SingleAsync(o => o.OfferingId == a.OfferingId);
+            return new(Guid.Empty, o.TitleSnapshot, c.IsArchived || h.IsArchived, c.CycleId);
+        }
+        var p = await _db.Projects.AsNoTracking().SingleAsync(p => p.ProjectId == a.ProjectId);
+        var m = await _db.Milestones.AsNoTracking().SingleAsync(m => m.MilestoneId == a.MilestoneId);
+        return new(m.MilestoneId, m.Title, p.IsArchived || c.IsArchived || h.IsArchived, c.CycleId);
     }
 
     public async Task<AssignmentRevisionDetails?> GetAsync(
@@ -109,7 +109,7 @@ public class AssignmentRevisionService : IAssignmentRevisionService
             row.InstructionsSnapshot,
             row.AcceptanceSnapshot,
             row.EvidencePolicySnapshot,
-            Convert.ToBase64String(row.RowVersion));
+            Convert.ToBase64String(row.RowVersion)) { CycleId = parent.CycleId };
     }
 
     public async Task<AssignmentRevisionResult> ReviseAsync(
@@ -169,6 +169,8 @@ public class AssignmentRevisionService : IAssignmentRevisionService
             await _db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable);
 
+        await AssignmentWorkflow.LockAsync(_db, assignmentId);
+
         if (!await IsAdministratorAsync(actorUserId))
         {
             return Failure("Administrator access is required.");
@@ -189,6 +191,7 @@ public class AssignmentRevisionService : IAssignmentRevisionService
 
         var assignment = await _db.Assignments.SingleAsync(
             item => item.AssignmentId == assignmentId);
+        await _db.Entry(assignment).ReloadAsync();
 
         if (!assignment.RowVersion.SequenceEqual(expectedVersion))
         {

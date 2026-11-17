@@ -28,5 +28,5 @@ public record CohortMembershipDetails(
 
 public interface ICohortMembershipQueryService
 {
-    Task<CohortMembershipDetails?> GetAsync(Guid cohortId);
+    Task<CohortMembershipDetails?> GetAsync(Guid cohortId, string actorUserId);
 }

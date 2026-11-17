@@ -1,0 +1,44 @@
+@page "{cycleId:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Courses.IndexModel
+<h1>Courses and individual assignments</h1>
+@if (TempData["CourseSuccess"] is string success) { <p role="status" aria-atomic="true">@success</p> }
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<h2 class="h5">Add course to catalogue</h2>
+<form class="workspace-panel management-form" method="post">
+<input type="hidden" name="action" value="create" />
+<label asp-for="Input.Title">Course title</label><input asp-for="Input.Title" maxlength="200" required />
+<label asp-for="Input.Platform">Platform</label><input asp-for="Input.Platform" maxlength="120" required />
+<label asp-for="Input.Url">External HTTPS course URL</label><input asp-for="Input.Url" type="url" maxlength="2048" required />
+<button type="submit">Create course</button>
+</form>
+<h2 class="h5 mt-3">Offer catalogue course in this cycle</h2>
+<form class="workspace-panel management-form" method="post">
+<input type="hidden" name="action" value="offer" />
+<label asp-for="Input.CourseId">Course</label><select asp-for="Input.CourseId">
+@foreach (var course in Model.Details.Courses) { <option value="@course.CourseId">@course.Title &middot; @course.Platform</option> }
+</select><button type="submit">Add course to cycle</button>
+</form>
+<h2 class="h5 mt-3">Assign offering to candidate</h2>
+<form class="workspace-panel management-form" method="post">
+<input type="hidden" name="action" value="assign" />
+<label asp-for="Input.OfferingId">Offering</label><select asp-for="Input.OfferingId">
+@foreach (var course in Model.Details.Offerings) { <option value="@course.CourseId">@course.Title</option> }
+</select>
+<label asp-for="Input.CandidateId">Candidate</label><select asp-for="Input.CandidateId">
+@foreach (var candidate in Model.Details.Candidates) { <option value="@candidate.Id">@candidate.Name</option> }
+</select>
+<label asp-for="Input.DueLocal">Deadline (SAST)</label><input asp-for="Input.DueLocal" type="datetime-local" required />
+<label asp-for="Input.Instructions">Instructions</label><textarea asp-for="Input.Instructions" maxlength="10000" required></textarea>
+<label asp-for="Input.Acceptance">Acceptance expectations</label><textarea asp-for="Input.Acceptance" maxlength="10000" required></textarea>
+<label asp-for="Input.Evidence">Evidence requirements (certificate file required)</label><textarea asp-for="Input.Evidence" maxlength="2000" required></textarea>
+<label asp-for="Input.Required">Required</label><input asp-for="Input.Required" />
+<button type="submit">Assign course</button>
+</form>
+<h2 class="h5 mt-3">Current course assignments</h2>
+@foreach(var assignment in Model.Details.Assignments)
+{
+<p>@assignment.Title &middot; @assignment.Owner
+<a asp-page="/Admin/Projects/ReviseAssignment" asp-route-assignmentId="@assignment.AssignmentId">Revise requirements/deadline</a>
+<a asp-page="/Admin/Projects/ReopenAssignment" asp-route-assignmentId="@assignment.AssignmentId">Review history / reopen effective approval</a>
+</p>
+}

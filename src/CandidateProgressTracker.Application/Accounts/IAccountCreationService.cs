@@ -9,5 +9,6 @@ public interface IAccountCreationService
     Task<AccountCreationResult> CreateAsync(
         string userName,
         string password,
-        string role);
+        string role,
+        string actorUserId);
 }

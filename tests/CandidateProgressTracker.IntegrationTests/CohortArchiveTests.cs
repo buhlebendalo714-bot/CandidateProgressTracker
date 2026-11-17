@@ -299,7 +299,7 @@ public class CohortArchiveTests
         var query = scope.ServiceProvider
             .GetRequiredService<ICohortQueryService>();
 
-        var details = await query.GetAsync(scenario.Cohort.CohortId);
+        var details = await query.GetAsync(scenario.Cohort.CohortId, scenario.AdminId);
 
         Assert.NotNull(details);
         Assert.Equal(scenario.Cohort.CohortId, details.CohortId);
@@ -345,7 +345,7 @@ public class CohortArchiveTests
         var query = scope.ServiceProvider
             .GetRequiredService<ICohortQueryService>();
 
-        var details = await query.GetAsync(scenario.Cohort.CohortId);
+        var details = await query.GetAsync(scenario.Cohort.CohortId, scenario.AdminId);
 
         Assert.NotNull(details);
         Assert.Equal(scenario.Cohort.CohortId, details.CohortId);
@@ -364,14 +364,14 @@ public class CohortArchiveTests
         await using var database = await TestDatabase.CreateAsync();
 
         // Keep a real cohort in the database to verify filtering by ID.
-        await ArrangeAsync(database);
+        var scenario = await ArrangeAsync(database);
 
         await using var scope = database.Services.CreateAsyncScope();
 
         var query = scope.ServiceProvider
             .GetRequiredService<ICohortQueryService>();
 
-        var details = await query.GetAsync(Guid.NewGuid());
+        var details = await query.GetAsync(Guid.NewGuid(), scenario.AdminId);
 
         Assert.Null(details);
     }

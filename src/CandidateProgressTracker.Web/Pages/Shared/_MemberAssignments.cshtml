@@ -10,7 +10,7 @@ else
 {
     @foreach (var assignment in Model.Assignments)
     {
-        <section class="card mb-3">
+        <section class="card mb-3 assignment-list-row">
             <div class="card-body">
                 <h2 class="h5">@assignment.MilestoneTitle</h2>
 
@@ -50,6 +50,34 @@ else
                     <h3 class="h6 mt-3">Evidence requirements</h3>
                     <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@assignment.EvidencePolicy</div>
                 </details>
+                @if (assignment.IsTeamAssignment && string.Equals(ViewContext.RouteData.Values["page"]?.ToString(), "/Candidate/Assignments", StringComparison.OrdinalIgnoreCase))
+                {
+                    <a asp-page="/Candidate/TeamSubmit" asp-route-assignmentId="@assignment.AssignmentId" class="btn btn-primary mt-3">Team submission eligibility</a>
+                    <a asp-page="/Candidate/TeamSubmissionHistory" asp-route-assignmentId="@assignment.AssignmentId" class="btn btn-outline-secondary mt-3">Team submission history</a>
+                }
+                @if (!assignment.IsTeamAssignment &&
+                    string.Equals(
+                        ViewContext.RouteData.Values["page"]?.ToString(),
+                        "/Candidate/Assignments",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    <a asp-page="/Candidate/Submit"
+                    asp-route-assignmentId="@assignment.AssignmentId"
+                    class="btn btn-primary mt-3">
+                        Submit evidence
+                    </a>
+                    <a asp-page="/Candidate/SubmissionHistory"
+                       asp-route-assignmentId="@assignment.AssignmentId"
+                       class="btn btn-outline-secondary mt-3">Submission history</a>
+                }
+                @if (
+                    string.Equals(ViewContext.RouteData.Values["page"]?.ToString(),
+                        "/Mentor/Assignments", StringComparison.OrdinalIgnoreCase))
+                {
+                    <a asp-page="/Mentor/SubmissionHistory"
+                       asp-route-assignmentId="@assignment.AssignmentId"
+                       class="btn btn-outline-secondary mt-3">Submission history</a>
+                }
             </div>
         </section>
     }

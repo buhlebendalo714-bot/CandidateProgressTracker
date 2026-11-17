@@ -8,7 +8,7 @@
 
 @if (TempData["SuccessMessage"] is string message)
 {
-    <div class="alert alert-success" role="status">@message</div>
+    <div class="alert alert-success" role="status" aria-atomic="true">@message</div>
 }
 
 <p>

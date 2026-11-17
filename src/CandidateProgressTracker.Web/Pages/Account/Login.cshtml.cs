@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace CandidateProgressTracker.Web.Pages.Account;
 
 [AllowAnonymous]
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("Credentials")]
 public class LoginModel : PageModel
 {
     private readonly SignInManager<IdentityUser> _signInManager;
@@ -63,6 +64,8 @@ public class LoginModel : PageModel
             Input.Password,
             isPersistent: false,
             lockoutOnFailure: true);
+        HttpContext.RequestServices.GetRequiredService<ILogger<LoginModel>>().LogInformation(
+            "Authentication {Outcome} correlation {CorrelationId}",result.Succeeded?"succeeded":"denied",HttpContext.TraceIdentifier);
 
         if (result.Succeeded)
         {

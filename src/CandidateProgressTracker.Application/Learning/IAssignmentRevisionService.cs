@@ -10,7 +10,10 @@ public record AssignmentRevisionDetails(
     string Instructions,
     string AcceptanceExpectations,
     string EvidencePolicy,
-    string RowVersion);
+    string RowVersion)
+{
+    public Guid CycleId { get; init; }
+}
 
 public record AssignmentRevisionResult(
     bool Succeeded,

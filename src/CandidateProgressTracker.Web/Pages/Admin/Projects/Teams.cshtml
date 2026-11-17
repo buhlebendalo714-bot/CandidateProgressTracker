@@ -9,7 +9,7 @@
 
 @if (TempData["SuccessMessage"] is string message)
 {
-    <div class="alert alert-success" role="status">@message</div>
+    <div class="alert alert-success" role="status" aria-atomic="true">@message</div>
 }
 
 <div asp-validation-summary="All"
@@ -30,7 +30,7 @@ else
     <form method="post"
           asp-page-handler="Create"
           asp-route-projectId="@Model.Project.ProjectId"
-          class="mb-4">
+          class="workspace-panel management-form mb-4">
         <div class="mb-3">
             <label for="teamName" class="form-label">Team name</label>
             <input id="teamName"
@@ -61,7 +61,7 @@ else
         <form method="post"
               asp-page-handler="Assign"
               asp-route-projectId="@Model.Project.ProjectId"
-              class="mb-4">
+              class="workspace-panel management-form mb-4">
             <div class="mb-3">
                 <label for="teamId" class="form-label">Team</label>
                 <select id="teamId"
@@ -144,7 +144,7 @@ else
                                     <form method="post"
                                           asp-page-handler="End"
                                           asp-route-projectId="@Model.Project.ProjectId"
-                                          class="mt-2">
+                                          class="workspace-panel management-form mt-2">
                                         <input type="hidden"
                                                name="membershipId"
                                                value="@member.TeamMembershipId" />

@@ -38,7 +38,7 @@ public class MembersModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(Guid id)
     {
-        var details = await _queryService.GetAsync(id);
+        var details = await _queryService.GetAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
 
         if (details is null)
         {
@@ -51,7 +51,7 @@ public class MembersModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(Guid id)
     {
-        var details = await _queryService.GetAsync(id);
+        var details = await _queryService.GetAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
 
         if (details is null)
         {
@@ -111,7 +111,7 @@ public class MembersModel : PageModel
             return Page();
         }
 
-        TempData["SuccessMessage"] = "Member assigned successfully.";
+        TempData["SuccessMessage"] = "Member added to the cohort.";
 
         return RedirectToPage("./Members", new { id });
     }

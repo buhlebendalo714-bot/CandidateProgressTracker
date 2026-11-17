@@ -34,7 +34,7 @@ public class CohortCreationService : ICohortCreationService
         var actor = await _userManager.FindByIdAsync(actorUserId);
 
         if (actor is null ||
-            !await _userManager.IsInRoleAsync(actor, "Administrator"))
+            !(await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, actor.Id) && await _userManager.IsInRoleAsync(actor, "Administrator")))
         {
             return Failure("Administrator access is required.");
         }

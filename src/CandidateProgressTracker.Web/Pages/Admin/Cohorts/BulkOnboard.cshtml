@@ -1,0 +1,80 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.BulkOnboardModel
+@using CandidateProgressTracker.Application.Cohorts
+@{ ViewData["Title"] = "Bulk onboard candidates"; }
+<h1>Bulk onboard candidates</h1>
+<p><strong>@Model.Details.Name</strong> &middot; @Model.Details.Code</p>
+<p><a asp-page="./Members" asp-route-id="@Model.Details.CohortId">Back to cohort members</a></p>
+<section class="workspace-panel">
+    <h2>1. Prepare your candidate list</h2>
+    <p>One cohort and membership start date per batch. Export as CSV UTF-8 from Excel; up to 100 candidates and 1 MB (1,048,576 bytes). Only UserName and Email columns are supported. New accounts require a unique email; names, passwords, roles and profile updates are not supported.</p>
+    <a asp-page-handler="Template" asp-route-id="@Model.Details.CohortId">Download CSV template</a>
+</section>
+<form method="post" enctype="multipart/form-data" class="workspace-panel management-form" asp-route-id="@Model.Details.CohortId">
+    <h2>2. Upload and preview</h2>
+    <div asp-validation-summary="All" role="alert"></div>
+    <label asp-for="StartDate"></label>
+    <input asp-for="StartDate" type="date" class="form-control" /><span asp-validation-for="StartDate" class="text-danger"></span>
+    <label asp-for="CsvFile"></label>
+    <input asp-for="CsvFile" type="file" accept=".csv,text/csv" class="form-control" /><span asp-validation-for="CsvFile" class="text-danger"></span>
+    <p>Preview only: no accounts, memberships or activation credentials are created. To correct rows, edit your CSV and select the file again.</p>
+    <button type="submit" class="btn btn-primary">Preview candidates</button>
+</form>
+@if (Model.Preview is { } preview)
+{
+    <section class="workspace-panel" aria-labelledby="preview-heading">
+        <h2 id="preview-heading">3. Review candidates</h2>
+        <p>Membership start date (SAST): <strong>@preview.StartDate.ToString("yyyy-MM-dd")</strong></p>
+        <p role="status" aria-atomic="true">New accounts: @preview.Rows.Count(r => r.Action == OnboardingAction.Create) &middot; Existing candidates to add: @preview.Rows.Count(r => r.Action == OnboardingAction.EnrolExisting) &middot; Already enrolled: @preview.Rows.Count(r => r.Action == OnboardingAction.Skip) &middot; Needs attention: @preview.Rows.Count(r => r.Action == OnboardingAction.Conflict)</p>
+        @foreach (var issue in preview.Issues)
+        { <p class="text-danger" role="alert">@(issue.Row > 0 && issue.Field != "File" ? $"Row {issue.Row} — " : "")@issue.Message</p> }
+        @if (preview.Rows.Count > 0)
+        {
+            <div class="workspace-table">
+                <table class="table">
+                    <thead><tr><th>CSV row</th><th>UserName / Email</th><th>Matched account</th><th>Proposed action</th><th>Explanation / correction</th></tr></thead>
+                    <tbody>
+                    @foreach (var row in preview.Rows)
+                    {
+                        <tr>
+                            <td>@row.Row</td><td>@row.UserName<br />@row.Email</td>
+                            <td>@(row.MatchedUserName ?? "No match displayed")<br />@row.MatchedEmail</td>
+                            <td>@UserText.Label(row.Action)</td>
+                            <td>@row.Explanation
+                                @foreach (var issue in row.Issues) { <p>Row @issue.Row — @issue.Field: @issue.Message</p> }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        @if (Model.ConfirmationTicket is not null)
+        {
+            <form method="post" asp-page-handler="Confirm" asp-route-id="@Model.Details.CohortId">
+                <input type="hidden" asp-for="ConfirmationTicket" />
+                <p>Review every row before confirming. Completed rows stay saved if a later row fails; you can resume unfinished rows.</p>
+                <p>New accounts need an activation code from you. Existing passwords and codes will not change.</p>
+                <button type="submit" class="btn btn-primary">Confirm onboarding</button>
+            </form>
+        }
+        else
+        {
+            @if(preview.Issues.Count > 0 || preview.Rows.Any(r => r.Action == OnboardingAction.Conflict))
+            { <p role="alert">Correct the listed problems in your CSV and upload it again before confirming.</p> }
+            else
+            { <p role="alert">Onboarding is unavailable. Ask your support contact to check import availability; no candidates have been added.</p> }
+        }
+        <p>Reviewing this file has not changed any accounts or memberships.</p>
+    </section>
+}
+
+@if (Model.SavedBatches.Count > 0)
+{
+    <section class="workspace-panel">
+        <h2>Your saved batches</h2>
+        <p>Open a saved batch to inspect progress or resume unfinished rows, including after an interrupted request. Showing the latest 20.</p>
+        <ul>@foreach (var batch in Model.SavedBatches)
+        { <li><a asp-page="./OnboardingBatch" asp-route-id="@batch.BatchId">Batch started @batch.CreatedAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm") SAST</a></li> }</ul>
+    </section>
+}

@@ -1,0 +1,42 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Mentor.ReviewSubmissionModel
+@using CandidateProgressTracker.Application.Learning
+@{
+    ViewData["Title"] = "Review submission";
+    ViewData["SeparateReviewRequirements"] = true;
+}
+<h1>Review submission</h1>
+<p>Assignment owner: @Model.Details.CandidateName</p>
+<a asp-page="./SubmissionHistory" asp-route-assignmentId="@Model.Details.AssignmentId">Submission history</a>
+@if (TempData["ReviewSuccess"] is string success) { <p class="alert alert-success" role="status" aria-atomic="true">@success</p> }
+<p>@Model.Details.Eligibility</p>
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<div class="review-workspace">
+<div class="workspace-main">
+@if (Model.Details.Attempt is not null)
+{
+    <partial name="_SubmissionHistory" model="@(new SubmissionHistoryPage(Model.Details.AssignmentId, "", "", 1, false, new[] { Model.Details.Attempt }) { Roster = Model.Details.Roster })" />
+}
+</div><aside class="workspace-context decision-context">@if (Model.Details.Attempt is not null) { <h2 class="h5">Submitted assignment context</h2><p>Original revision @Model.Details.Attempt.RevisionNo. The saved requirements below belong to this exact attempt.</p><partial name="_SavedRequirements" model="Model.Details.Attempt" /> }
+<h2 class="h5">Review decision</h2><p>Use the submitted evidence and saved requirements. Submission timing is separate from your decision.</p>
+@if (Model.Details.CanDecide)
+{
+    <form method="post" class="decision-form">
+        <input type="hidden" asp-for="Input.SubmissionId" />
+        <input type="hidden" asp-for="Input.RowVersion" />
+        <input type="hidden" asp-for="Input.RequestId" />
+        <label asp-for="Input.Decision">Decision</label>
+        <select asp-for="Input.Decision" class="form-select">
+            <option value="0">Choose a decision</option>
+            <option value="1">Approved</option>
+            <option value="2">Changes requested</option>
+        </select>
+        <label asp-for="Input.Feedback">Feedback (required for changes requested; maximum 10,000 characters)</label>
+        <textarea asp-for="Input.Feedback" maxlength="10000" class="form-control"></textarea>
+        <button class="btn btn-primary mt-3" type="submit">Record decision</button>
+    </form>
+}
+
+</aside></div>
+
+@if (Model.Details.Attempt is not null) { <section class="workspace-panel review-history"><partial name="_ReviewEvents" model="Model.Details.Attempt" /></section> }

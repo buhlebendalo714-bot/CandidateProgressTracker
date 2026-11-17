@@ -1,4 +1,6 @@
+using System.Data;
 using CandidateProgressTracker.Application.Cohorts;
+using CandidateProgressTracker.Infrastructure.Identity;
 using CandidateProgressTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +15,11 @@ public class CohortQueryService : ICohortQueryService
         _db = db;
     }
 
-    public async Task<IReadOnlyList<CohortSummary>> GetCohortsAsync()
+    public async Task<IReadOnlyList<CohortSummary>?> GetCohortsAsync(string actorUserId)
     {
-        return await _db.Cohorts
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        if (!await AdministratorAccess.IsCurrentAsync(_db, actorUserId)) return null;
+        var result = await _db.Cohorts
             .AsNoTracking()
             .OrderBy(cohort => cohort.Name)
             .ThenBy(cohort => cohort.Code)
@@ -27,11 +31,15 @@ public class CohortQueryService : ICohortQueryService
                 cohort.LocationLabel,
                 cohort.IsArchived))
             .ToListAsync();
+        await transaction.CommitAsync();
+        return result;
     }
 
-    public async Task<CohortDetails?> GetAsync(Guid cohortId)
+    public async Task<CohortDetails?> GetAsync(Guid cohortId, string actorUserId)
     {
-        return await (
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        if (!await AdministratorAccess.IsCurrentAsync(_db, actorUserId)) return null;
+        var result = await (
             from cohort in _db.Cohorts.AsNoTracking()
             join user in _db.Users.AsNoTracking()
                 on cohort.ArchivedBy equals user.Id into archiveUsers
@@ -48,5 +56,7 @@ public class CohortQueryService : ICohortQueryService
                 archiveUser == null ? null : archiveUser.UserName,
                 cohort.ArchiveReason))
             .SingleOrDefaultAsync();
+        await transaction.CommitAsync();
+        return result;
     }   
 }

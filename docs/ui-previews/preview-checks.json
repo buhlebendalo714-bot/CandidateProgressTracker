@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-12",
+  "scope": "Static illustrative previews only; not authenticated functional acceptance",
+  "browserVersion": "Chrome/157.0.8103.39",
+  "results": [
+    {
+      "screen": "candidate",
+      "width": 1440,
+      "height": 1000,
+      "screenshot": "candidate-desktop.png",
+      "documentWidth": 1425,
+      "missingLabels": [],
+      "primary": 1,
+      "keyboardFocus": true,
+      "mobileMenu": "desktop navigation",
+      "stateChecks": true
+    },
+    {
+      "screen": "candidate",
+      "width": 390,
+      "height": 1000,
+      "screenshot": "candidate-mobile.png",
+      "documentWidth": 375,
+      "missingLabels": [],
+      "primary": 1,
+      "keyboardFocus": true,
+      "mobileMenu": "focus/inert/Escape checked",
+      "stateChecks": true
+    },
+    {
+      "screen": "mentor",
+      "width": 1440,
+      "height": 1000,
+      "screenshot": "mentor-desktop.png",
+      "documentWidth": 1425,
+      "missingLabels": [],
+      "primary": 1,
+      "keyboardFocus": true,
+      "mobileMenu": "desktop navigation",
+      "stateChecks": true
+    },
+    {
+      "screen": "mentor",
+      "width": 390,
+      "height": 1000,
+      "screenshot": "mentor-mobile.png",
+      "documentWidth": 375,
+      "missingLabels": [],
+      "primary": 1,
+      "keyboardFocus": true,
+      "mobileMenu": "focus/inert/Escape checked",
+      "stateChecks": true
+    }
+  ],
+  "contrast": {
+    "primary": 14.11,
+    "text": 13.91,
+    "muted": 6.09,
+    "success": 6.75,
+    "warning": 6.79,
+    "error": 6.83
+  },
+  "runtimeErrors": [],
+  "externalRequests": 0
+}

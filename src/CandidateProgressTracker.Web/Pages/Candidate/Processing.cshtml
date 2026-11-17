@@ -1,0 +1,14 @@
+@page "{attemptId:guid}"
+@model CandidateProgressTracker.Web.Pages.Candidate.ProcessingModel
+<h1>@UserText.Label(Model.Receipt.Status)</h1>
+<section class="workspace-panel processing-panel"><p role="status" aria-atomic="true">@Model.Receipt.Message</p>
+<details><summary>Upload reference</summary><p>@Model.Receipt.AttemptId</p></details>
+@if(Model.Receipt.SubmissionId is {} submissionId){<p><strong>Submission saved.</strong> Your evidence is ready for review. Receipt: @submissionId</p>}
+<div class="workspace-actions"><a class="btn btn-primary" asp-page="./Processing" asp-route-attemptId="@Model.Receipt.AttemptId">Refresh processing status</a>
+<a asp-page="./Assignments">My project assignments</a>
+<a asp-page="./Courses">My courses</a>
+</div>
+@if(Model.Receipt.Status=="Processing"){<p>Your files are being checked. This is not yet a saved submission. Refresh this page to check again.</p>}
+else if(Model.Receipt.Status is "Rejected" or "Expired"){<p>No submission was saved from this upload. Return to the assignment, review the message above and upload your evidence again.</p>}
+
+</section>

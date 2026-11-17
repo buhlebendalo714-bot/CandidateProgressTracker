@@ -1,0 +1,25 @@
+@model int
+<section data-evidence-editor aria-label="Evidence links">
+    <p>Optional links: maximum 10. Leave unused rows blank; complete both fields for each link.</p>
+    <div data-link-rows>
+        @for (var i = 0; i < Model; i++)
+        {
+            <fieldset class="border rounded p-3 mb-3" data-link-row>
+                <legend class="float-none w-auto px-2 fs-6">Link @(i + 1)</legend>
+                @foreach (var field in new[] { "Label", "Url" })
+                {
+                    var name = $"Input.Evidence[{i}].{field}";
+                    var id = $"evidence-{i}-{field}";
+                    <div class="mb-2">
+                        <label for="@id" class="form-label">@(field == "Url" ? "Secure web address (https://)" : "Label")</label>
+                        @Html.TextBox(name, null, new { id, type = field == "Url" ? "url" : "text", maxlength = field == "Url" ? 2000 : 200, @class = "form-control", data_link_field = field })
+                        @Html.ValidationMessage(name, null, new { @class = "text-danger" })
+                    </div>
+                }
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-remove-link aria-label="Remove link @(i + 1)">Remove link</button>
+            </fieldset>
+        }
+    </div>
+    <button type="button" class="btn btn-outline-secondary mb-3" data-add-link>Add another link</button>
+    <p class="text-muted" role="status" aria-atomic="true" aria-live="polite" data-link-status></p>
+</section>

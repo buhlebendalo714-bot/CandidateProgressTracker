@@ -1,0 +1,17 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Admin.AuditModel
+<h1>Audit history</h1>
+<form class="workspace-panel filter-form" method="get">
+<label asp-for="Actor">Person ID (optional)</label><input asp-for="Actor" maxlength="450" />
+<label asp-for="Action">Stored action (for example Added or Modified)</label><input asp-for="Action" maxlength="80" />
+<label asp-for="Record">Record type or ID</label><input asp-for="Record" maxlength="1000" />
+<label asp-for="From">From (include UTC offset)</label><input asp-for="From" />
+<label asp-for="To">Through (include UTC offset)</label><input asp-for="To" />
+<button type="submit">Search</button>
+</form>
+<p>Search recorded activity by person, action, record or date. Codes, passwords and file contents are never shown here.</p>
+<div class="table-responsive workspace-table" tabindex="0" role="region" aria-label="Scrollable records"><table class="table"><thead><tr><th>SAST</th><th>Who</th><th>Affected record</th><th>Action</th><th>Reason / details</th></tr></thead><tbody>
+@foreach(var e in Model.Results.Rows){<tr><td>@e.OccurredAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss")</td><td>@(e.ActorName ?? "Name not recorded")</td><td>@UserText.Label(e.EntityType) @e.AffectedName</td><td>@(e.DisplayAction ?? UserText.AuditAction(e.EntityType,e.Action))</td><td>@if(e.Reason is not null){<p>Reason: @e.Reason</p>}<details><summary>Record references and source</summary><p>Person ID: @(e.ActorId ?? "Not recorded")</p><p>Record: @e.EntityType / @e.EntityId</p><p>Stored action: @e.Action</p><p>@e.Details (@e.Source)</p></details></td></tr>}
+</tbody></table></div>
+@if(Model.Results.Page>1){<a asp-route-Actor="@Model.Actor" asp-route-Action="@Model.Action" asp-route-Record="@Model.Record" asp-route-From="@Model.From" asp-route-To="@Model.To" asp-route-PageNumber="@(Model.Results.Page-1)">Previous</a>}
+@if(Model.Results.HasNext){<a asp-route-Actor="@Model.Actor" asp-route-Action="@Model.Action" asp-route-Record="@Model.Record" asp-route-From="@Model.From" asp-route-To="@Model.To" asp-route-PageNumber="@(Model.Results.Page+1)">Next</a>}

@@ -1,50 +1,63 @@
 @page
 @model CandidateProgressTracker.Web.Pages.Candidate.IndexModel
 @{
-    ViewData["Title"] = "My cohorts";
+    ViewData["Title"]="Your learning";
+    var next=Model.NextAction;
+    var selected=Model.Overview.Cycles.FirstOrDefault(c=>c.CycleId==Model.Overview.SelectedCycle);
 }
-
-<h1>My cohorts</h1>
-<p>
-    <a asp-page="./Assignments" class="btn btn-outline-primary">
-        My assignments
-    </a>
-</p>
-
-<p>Your current assignments in unarchived cohorts.</p>
-
-@if (Model.Cohorts.Count == 0)
-{
-    <div class="alert alert-info" role="status">
-        You have no current cohort assignments.
-        Contact your administrator if you expected to see a cohort.
+@section PageHeader {
+<div class="page-heading">
+    <div><p class="eyebrow">Learning workspace</p><h1>Your learning</h1><p class="page-description">Progress, next steps and feedback for your selected cycle.</p></div>
+    @if(next is not null){<a class="btn btn-primary" asp-page="@(next.IsTeam?"./TeamSubmit":"./Submit")" asp-route-assignmentId="@next.AssignmentId">@(next.Status=="Changes requested"?"Update evidence":"Continue submission") <span aria-hidden="true">&rarr;</span></a>}
+    else{<a class="btn btn-primary" asp-page="./Courses">Explore your courses <span aria-hidden="true">&rarr;</span></a>}
+</div>
+}
+<div class="dashboard-context">
+    <div><span class="context-label">@(selected?.CohortName ?? "Your cohorts")</span><p>@(selected?.Name ?? "No active learning cycle")</p></div>
+    @if(Model.Overview.Cycles.Count>0){
+    <form method="get" class="workspace-panel filter-form cycle-filter"><label for="cycleId">Learning cycle</label><div><select id="cycleId" name="cycleId">@foreach(var c in Model.Overview.Cycles){<option value="@c.CycleId" selected="@(c.CycleId==Model.Overview.SelectedCycle)">@c.CohortName / @c.Name</option>}</select><button class="btn btn-outline-primary" type="submit">Show</button></div></form>
+    }
+</div>
+<section class="progress-panel" aria-labelledby="progress-title">
+    <div class="section-heading"><h2 id="progress-title">Your progress</h2><a asp-page="./Progress" asp-route-cycleId="@Model.Overview.SelectedCycle">Progress details</a></div>
+    <div class="progress-columns">
+    @foreach(var theory in new[]{true,false}){
+        var totals=theory?Model.Overview.Theory:Model.Overview.Projects;
+        <div class="progress-summary"><div class="progress-title"><h3>@(theory?"Theory":"Projects")</h3><a asp-page="@(theory?"./Courses":"./Assignments")">@(theory?"View courses":"View projects") <span aria-hidden="true">&rarr;</span></a></div>
+        @if(totals.Required>0){<p class="completion-value">@totals.Percentage!.Value.ToString("0.#")<span>%</span></p><progress max="@totals.Required" value="@totals.Approved" aria-label="@(theory?"Theory completion":"Project completion")">@totals.Approved / @totals.Required</progress><p class="completion-detail">@totals.Approved of @totals.Required required assignments approved</p>}
+        else{<p class="empty-progress">No required assignments</p><p class="completion-detail">Required work will appear here when assigned.</p>}
+        <p class="progress-footnote">@totals.Pending awaiting review <span aria-hidden="true">&middot;</span> @totals.ChangesRequested changes requested</p></div>
+    }
     </div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Code</th>
-                    <th scope="col">Location</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var cohort in Model.Cohorts)
-                {
-                    <tr>
-                        <td>
-                            <a asp-page="./Cycles" asp-route-id="@cohort.CohortId">
-                                @cohort.Name
-                            </a>
-                        </td>
-                        <td>@cohort.Code</td>
-                        <td>@(cohort.LocationLabel ?? "Not specified")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
+    <p class="panel-note">Only approvals that have not been reopened count. Optional work and team assignments without your recorded credit are excluded.</p>
+</section>
+<div class="dashboard-columns">
+<section class="work-panel" aria-labelledby="next-title">
+    <div class="section-heading"><div><p class="eyebrow">Your next steps</p><h2 id="next-title">Work to focus on</h2></div><span class="item-count">@Model.Actionable.Count @(Model.Actionable.Count==1?"item":"items")</span></div>
+    <p class="section-description">Changes requested first, then overdue and upcoming submissions.</p>
+    @if(Model.Actionable.Count==0){<div class="empty-state"><h3>No submission action needed</h3><p>Check your learning areas and recent feedback for the next step.</p></div>}
+    <ol class="action-list">
+    @foreach(var a in Model.Actionable.Take(5)){
+        var late=a.DueAt<Model.Now;
+        <li class="candidate-action" data-assignment-id="@a.AssignmentId"><div class="work-meta"><span class="status-label @(a.Status=="Changes requested"?"status-changes":late?"status-overdue":"status-upcoming")">@(a.Status=="Changes requested"?"Changes requested":late?"Overdue submission":"Upcoming submission")</span><span>@(a.IsCourse?"Theory":a.IsTeam?"Team project":"Project")</span></div>
+        <h3><a asp-page="@(a.IsTeam?"./TeamSubmit":"./Submit")" asp-route-assignmentId="@a.AssignmentId">@a.Title</a></h3><p class="work-group">@a.Group</p><div class="work-bottom"><span>Due @a.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy, HH:mm") SAST@(late?" (overdue)":"")</span><a asp-page="@(a.IsTeam?"./TeamSubmit":"./Submit")" asp-route-assignmentId="@a.AssignmentId">@(a.Status=="Changes requested"?"Update evidence":"Open assignment") <span aria-hidden="true">&rarr;</span></a></div></li>
+    }
+    </ol>
+    @if(Model.Actionable.Count>5){<a href="#submission-history">See all assignments below</a>}
+    <div class="review-note"><strong>@(Model.Overview.Theory.Pending+Model.Overview.Projects.Pending) awaiting mentor review</strong><p>Submitted work waiting for a decision is not overdue candidate work.</p></div>
+</section>
+<section class="feedback-panel" aria-labelledby="feedback-title">
+    <div class="section-heading"><div><p class="eyebrow">From your mentors</p><h2 id="feedback-title">Recent feedback</h2></div></div>
+    @if(Model.Overview.RecentFeedback.Count==0){<div class="empty-state"><h3>No feedback yet</h3><p>Written feedback appears here after your mentor reviews a submission.</p></div>}
+    @foreach(var f in Model.Overview.RecentFeedback){<article class="feedback-item"><p class="feedback-decision">@UserText.Label(f.Decision) <span>&middot; Attempt @f.AttemptNo</span></p><h3><a asp-page="@(f.IsTeam?"./TeamSubmissionHistory":"./SubmissionHistory")" asp-route-assignmentId="@f.AssignmentId">@f.Title</a></h3><p class="feedback-text">@f.Feedback</p><p class="feedback-by">@f.Mentor &middot; @f.DecidedAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy") SAST</p><a asp-page="@(f.IsTeam?"./TeamSubmissionHistory":"./SubmissionHistory")" asp-route-assignmentId="@f.AssignmentId">View attempt and feedback <span aria-hidden="true">&rarr;</span></a></article>}
+    <p class="panel-note">Decisions refer to the attempt reviewed. Open history for current approval and reopening details.</p>
+</section>
+</div>
+<section id="submission-history" class="history-panel" aria-labelledby="history-title">
+    <div class="section-heading"><div><p class="eyebrow">Your learning record</p><h2 id="history-title">Assignments &amp; submission history</h2></div></div>
+    @if(Model.Overview.Assignments.Count==0){<p class="empty-state">No assignments in this cycle. Contact your administrator if you expected work to be assigned.</p>}
+    else{<div class="table-responsive"><table class="table dashboard-table"><thead><tr><th>Assignment</th><th>Learning area</th><th>Current status</th><th><span class="visually-hidden">History</span></th></tr></thead><tbody>
+    @foreach(var a in Model.Overview.Assignments){<tr><td><strong>@a.Title</strong><span class="table-subtitle">@a.Group</span></td><td>@(a.IsCourse?"Theory":a.IsTeam?"Team project":"Project")</td><td>@UserText.Label(a.Status) @if(!a.CountsForProgress){<span class="table-subtitle">View only; not included in the recorded members</span>}</td><td><a asp-page="@(a.IsTeam?"./TeamSubmissionHistory":"./SubmissionHistory")" asp-route-assignmentId="@a.AssignmentId">History <span class="visually-hidden">for @a.Title</span><span aria-hidden="true">&rarr;</span></a></td></tr>}
+    </tbody></table></div>}
+</section>
+<details id="learning-context" class="learning-context"><summary>Your cohorts &amp; learning cycles</summary><ul>@foreach(var c in Model.Cohorts){<li><a asp-page="./Cycles" asp-route-id="@c.CohortId">@c.Name</a><span>@c.Code @(c.LocationLabel is null?"":" / "+c.LocationLabel)</span></li>}</ul></details>

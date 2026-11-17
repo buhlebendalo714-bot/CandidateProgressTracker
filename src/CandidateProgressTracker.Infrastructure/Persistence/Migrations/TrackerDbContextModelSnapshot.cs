@@ -22,6 +22,177 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Accounts.AccountAccessState", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("PermissionVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("ChangedBy");
+
+                    b.ToTable("AccountAccessStates");
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Accounts.AccountChange", b =>
+                {
+                    b.Property<Guid>("AccountChangeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("AccountChangeId");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AccountChanges", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Accounts.AccountCredential", b =>
+                {
+                    b.Property<Guid>("CredentialId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("IssuedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("CredentialId");
+
+                    b.HasIndex("IssuedBy");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "IssuedAt");
+
+                    b.ToTable("AccountCredentials", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AccountCredentials_Expiry", "[ExpiresAt] > [IssuedAt] AND [Kind] IN ('Activation','Recovery')");
+                        });
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Auditing.AuditEvent", b =>
+                {
+                    b.Property<Guid>("AuditEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("ActorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("AuditEventId");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("OccurredAt", "AuditEventId");
+
+                    b.ToTable("AuditEvents", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.Cohort", b =>
                 {
                     b.Property<Guid>("CohortId")
@@ -154,6 +325,110 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.OnboardingBatch", b =>
+                {
+                    b.Property<Guid>("BatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CohortId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("BatchId");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("CohortId");
+
+                    b.ToTable("OnboardingBatches");
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.OnboardingBatchRow", b =>
+                {
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Row")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ExpectedUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid?>("MembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("BatchId", "Row");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OnboardingBatchRows", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OnboardingBatchRows_Action", "[Action] IN ('Create','EnrolExisting','Skip')");
+
+                            t.HasCheckConstraint("CK_OnboardingBatchRows_Row", "[Row] > 1");
+
+                            t.HasCheckConstraint("CK_OnboardingBatchRows_Status", "[Status] IN ('Pending','Failed','Created','Enrolled','Skipped')");
+                        });
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Assignment", b =>
                 {
                     b.Property<Guid>("AssignmentId")
@@ -181,10 +456,13 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsRequired")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("MilestoneId")
+                    b.Property<Guid?>("MilestoneId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ProjectId")
+                    b.Property<Guid?>("OfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProjectId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
@@ -204,13 +482,19 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("MilestoneId", "CandidateId")
                         .IsUnique()
-                        .HasFilter("[CandidateId] IS NOT NULL");
+                        .HasFilter("[CandidateId] IS NOT NULL AND [MilestoneId] IS NOT NULL");
 
                     b.HasIndex("MilestoneId", "ProjectId");
 
                     b.HasIndex("MilestoneId", "TeamId")
                         .IsUnique()
                         .HasFilter("[TeamId] IS NOT NULL");
+
+                    b.HasIndex("OfferingId", "CandidateId")
+                        .IsUnique()
+                        .HasFilter("[OfferingId] IS NOT NULL");
+
+                    b.HasIndex("OfferingId", "CycleId");
 
                     b.HasIndex("ProjectId", "CycleId");
 
@@ -224,7 +508,144 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Assignments_ExactlyOneOwner", "([CandidateId] IS NOT NULL AND [TeamId] IS NULL)\r\nOR\r\n([CandidateId] IS NULL AND [TeamId] IS NOT NULL)");
 
+                            t.HasCheckConstraint("CK_Assignments_Target", "([OfferingId] IS NULL AND [ProjectId] IS NOT NULL AND [MilestoneId] IS NOT NULL) OR ([OfferingId] IS NOT NULL AND [ProjectId] IS NULL AND [MilestoneId] IS NULL AND [CandidateId] IS NOT NULL AND [TeamId] IS NULL)");
+
                             t.HasCheckConstraint("CK_Assignments_UtcTimestamps", "DATEPART(TZOFFSET, [DueAt]) = 0\r\nAND DATEPART(TZOFFSET, [CreatedAt]) = 0");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentCreditedRoster", b =>
+                {
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CohortId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("FrozenAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FrozenBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TeamNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("AssignmentId");
+
+                    b.HasIndex("CohortId");
+
+                    b.HasIndex("FrozenBy");
+
+                    b.HasIndex("TeamId", "ProjectId");
+
+                    b.ToTable("AssignmentCreditedRosters", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CreditedRosters_Utc", "DATEPART(TZOFFSET, [FrozenAt]) = 0");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentCreditedRosterMember", b =>
+                {
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CohortId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CohortMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeamMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("AssignmentId", "UserId");
+
+                    b.HasIndex("CohortMembershipId", "CohortId", "UserId");
+
+                    b.HasIndex("AssignmentId", "TeamId", "ProjectId", "CohortId");
+
+                    b.HasIndex("TeamMembershipId", "TeamId", "ProjectId", "UserId");
+
+                    b.ToTable("AssignmentCreditedRosterMembers", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentReopening", b =>
+                {
+                    b.Property<Guid>("ReopeningId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdministratorId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("ApprovalReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset>("ReopenedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ReopeningId");
+
+                    b.HasIndex("ApprovalReviewId")
+                        .IsUnique();
+
+                    b.HasIndex("AdministratorId", "RequestId")
+                        .IsUnique();
+
+                    b.HasIndex("ApprovalReviewId", "AssignmentId");
+
+                    b.ToTable("AssignmentReopenings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AssignmentReopenings_Reason", "LEN(LTRIM(RTRIM([Reason]))) > 0");
+
+                            t.HasCheckConstraint("CK_AssignmentReopenings_Request", "[RequestId] <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("CK_AssignmentReopenings_Utc", "DATEPART(TZOFFSET, [ReopenedAt]) = 0");
                         });
                 });
 
@@ -271,8 +692,6 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
 
                     b.HasKey("RevisionId");
 
-                    b.HasAlternateKey("RevisionId", "AssignmentId");
-
                     b.HasIndex("ChangedBy");
 
                     b.HasIndex("AssignmentId", "RevisionNo")
@@ -286,6 +705,149 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_AssignmentRevisions_UtcTimestamps", "DATEPART(TZOFFSET, [DueAt]) = 0\r\nAND DATEPART(TZOFFSET, [ChangedAt]) = 0");
                         });
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Course", b =>
+                {
+                    b.Property<Guid>("CourseId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.HasKey("CourseId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.CourseOffering", b =>
+                {
+                    b.Property<Guid>("OfferingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CycleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PlatformSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("TitleSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UrlSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.HasKey("OfferingId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("CycleId");
+
+                    b.HasIndex("CourseId", "CycleId")
+                        .IsUnique();
+
+                    b.ToTable("CourseOfferings");
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.EvidenceFile", b =>
+                {
+                    b.Property<Guid>("EvidenceFileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("ObjectKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("OriginalName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ScanResult")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset?>("ScannedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("SequenceNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("UploadAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("EvidenceFileId");
+
+                    b.HasIndex("ObjectKey")
+                        .IsUnique();
+
+                    b.HasIndex("UploadAttemptId", "SequenceNo")
+                        .IsUnique();
+
+                    b.ToTable("EvidenceFiles", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EvidenceFiles_Size", "[SizeBytes]>0 AND [SizeBytes]<=10485760 AND [SequenceNo] BETWEEN 1 AND 5");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.LearningCycle", b =>
@@ -517,6 +1079,224 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.ToTable("ProjectTeams", (string)null);
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.ScopeArchiveEvent", b =>
+                {
+                    b.Property<Guid>("ScopeArchiveEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("Archived")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ExpectedVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("OutcomeSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ScopeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ScopeType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("ScopeArchiveEventId");
+
+                    b.HasIndex("ActorId", "RequestId")
+                        .IsUnique();
+
+                    b.HasIndex("ScopeId", "OccurredAt");
+
+                    b.ToTable("ScopeArchiveEvents", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ScopeArchiveEvents_Kind", "[ScopeType] IN ('Project','Cycle') AND LEN(LTRIM(RTRIM([Reason]))) BETWEEN 1 AND 1000");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Submission", b =>
+                {
+                    b.Property<Guid>("SubmissionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssignmentRevisionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptNo")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("CreditedRosterAssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("datetimeoffset(7)");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubmittedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("SubmissionId");
+
+                    b.HasIndex("CreditedRosterAssignmentId");
+
+                    b.HasIndex("AssignmentId", "AttemptNo")
+                        .IsUnique();
+
+                    b.HasIndex("AssignmentRevisionId", "AssignmentId");
+
+                    b.HasIndex("SubmittedBy", "RequestId")
+                        .IsUnique();
+
+                    b.ToTable("Submissions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Submissions_AttemptNo", "[AttemptNo] > 0");
+
+                            t.HasCheckConstraint("CK_Submissions_Explanation", "LEN(LTRIM(RTRIM([Explanation]))) > 0");
+
+                            t.HasCheckConstraint("CK_Submissions_RequestId", "[RequestId] <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("CK_Submissions_RosterAssignment", "[CreditedRosterAssignmentId] IS NULL OR [CreditedRosterAssignmentId] = [AssignmentId]");
+
+                            t.HasCheckConstraint("CK_Submissions_TimestampOrder", "[RecordedAt] >= [ReceivedAt]");
+
+                            t.HasCheckConstraint("CK_Submissions_UtcTimestamps", "DATEPART(TZOFFSET, [ReceivedAt]) = 0\r\nAND DATEPART(TZOFFSET, [RecordedAt]) = 0");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.SubmissionEvidence", b =>
+                {
+                    b.Property<Guid>("SubmissionEvidenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SequenceNo")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("SubmissionEvidenceId");
+
+                    b.HasIndex("SubmissionId", "SequenceNo")
+                        .IsUnique();
+
+                    b.ToTable("SubmissionEvidence", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SubmissionEvidence_Label", "LEN(LTRIM(RTRIM([Label]))) > 0");
+
+                            t.HasCheckConstraint("CK_SubmissionEvidence_SequenceNo", "[SequenceNo] > 0");
+
+                            t.HasCheckConstraint("CK_SubmissionEvidence_Url", "LEN(LTRIM(RTRIM([Url]))) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.SubmissionReview", b =>
+                {
+                    b.Property<Guid>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("Decision")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Feedback")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ReviewNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("AssignmentId", "ReviewNo")
+                        .IsUnique();
+
+                    b.HasIndex("ReviewerId", "RequestId")
+                        .IsUnique();
+
+                    b.HasIndex("SubmissionId", "AssignmentId");
+
+                    b.ToTable("SubmissionReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SubmissionReviews_Decision", "[Decision] IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_SubmissionReviews_Feedback", "DATALENGTH([Feedback]) <= 20000 AND ([Decision] <> 2 OR LEN(LTRIM(RTRIM([Feedback]))) > 0)");
+
+                            t.HasCheckConstraint("CK_SubmissionReviews_Number", "[ReviewNo] > 0");
+
+                            t.HasCheckConstraint("CK_SubmissionReviews_Request", "[RequestId] <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("CK_SubmissionReviews_Utc", "DATEPART(TZOFFSET, [DecidedAt]) = 0");
+                        });
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.TeamMembership", b =>
                 {
                     b.Property<Guid>("TeamMembershipId")
@@ -582,6 +1362,113 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_TeamMemberships_DateOrder", "[EndsAt] IS NULL OR [EndsAt] > [StartsAt]");
                         });
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.UploadAttempt", b =>
+                {
+                    b.Property<Guid>("UploadAttemptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("ExpectedVersion")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("varbinary(8)");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Failures")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Hold")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("LeaseUntil")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("LinksJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset>("NextTryAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RevisionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RosterConfirmation")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid?>("SubmissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UploadAttemptId");
+
+                    b.HasIndex("SubmissionId")
+                        .IsUnique()
+                        .HasFilter("[SubmissionId] IS NOT NULL");
+
+                    b.HasIndex("ActorId", "RequestId")
+                        .IsUnique();
+
+                    b.HasIndex("RevisionId", "AssignmentId");
+
+                    b.HasIndex("SubmissionId", "AssignmentId");
+
+                    b.HasIndex("Status", "NextTryAt", "LeaseUntil");
+
+                    b.ToTable("UploadAttempts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadAttempts_State", "([Status]='Committed' AND [SubmissionId] IS NOT NULL) OR ([Status] IN ('Processing','Rejected','Expired') AND [SubmissionId] IS NULL)");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -691,7 +1578,9 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
+                        .IsUnique()
+                        .HasDatabaseName("EmailIndex")
+                        .HasFilter("[NormalizedEmail] IS NOT NULL");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
@@ -782,6 +1671,51 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Accounts.AccountAccessState", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ChangedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Accounts.AccountChange", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Accounts.AccountCredential", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("IssuedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.Cohort", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
@@ -822,6 +1756,40 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.OnboardingBatch", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.Cohort", null)
+                        .WithMany()
+                        .HasForeignKey("CohortId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Cohorts.OnboardingBatchRow", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.OnboardingBatch", null)
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.CohortMembership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Assignment", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
@@ -839,13 +1807,44 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("MilestoneId", "ProjectId")
                         .HasPrincipalKey("MilestoneId", "ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.CourseOffering", null)
+                        .WithMany()
+                        .HasForeignKey("OfferingId", "CycleId")
+                        .HasPrincipalKey("OfferingId", "CycleId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("CandidateProgressTracker.Domain.Learning.Project", null)
                         .WithMany()
                         .HasForeignKey("ProjectId", "CycleId")
                         .HasPrincipalKey("ProjectId", "CycleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.ProjectTeam", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId", "ProjectId")
+                        .HasPrincipalKey("TeamId", "ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentCreditedRoster", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Assignment", null)
+                        .WithMany()
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.Cohort", null)
+                        .WithMany()
+                        .HasForeignKey("CohortId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("FrozenBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -853,7 +1852,48 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TeamId", "ProjectId")
                         .HasPrincipalKey("TeamId", "ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentCreditedRosterMember", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Cohorts.CohortMembership", null)
+                        .WithMany()
+                        .HasForeignKey("CohortMembershipId", "CohortId", "UserId")
+                        .HasPrincipalKey("MembershipId", "CohortId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.AssignmentCreditedRoster", null)
+                        .WithMany()
+                        .HasForeignKey("AssignmentId", "TeamId", "ProjectId", "CohortId")
+                        .HasPrincipalKey("AssignmentId", "TeamId", "ProjectId", "CohortId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.TeamMembership", null)
+                        .WithMany()
+                        .HasForeignKey("TeamMembershipId", "TeamId", "ProjectId", "UserId")
+                        .HasPrincipalKey("TeamMembershipId", "TeamId", "ProjectId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentReopening", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("AdministratorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.SubmissionReview", null)
+                        .WithMany()
+                        .HasForeignKey("ApprovalReviewId", "AssignmentId")
+                        .HasPrincipalKey("ReviewId", "AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.AssignmentRevision", b =>
@@ -867,6 +1907,45 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("ChangedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Course", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.CourseOffering", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.LearningCycle", null)
+                        .WithMany()
+                        .HasForeignKey("CycleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.EvidenceFile", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.UploadAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("UploadAttemptId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -941,6 +2020,61 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.ScopeArchiveEvent", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.Submission", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.AssignmentCreditedRoster", null)
+                        .WithMany()
+                        .HasForeignKey("CreditedRosterAssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("SubmittedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.AssignmentRevision", null)
+                        .WithMany()
+                        .HasForeignKey("AssignmentRevisionId", "AssignmentId")
+                        .HasPrincipalKey("RevisionId", "AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.SubmissionEvidence", b =>
+                {
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Submission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.SubmissionReview", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Submission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId", "AssignmentId")
+                        .HasPrincipalKey("SubmissionId", "AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.TeamMembership", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
@@ -966,6 +2100,28 @@ namespace CandidateProgressTracker.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("TeamId", "ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("CandidateProgressTracker.Domain.Learning.UploadAttempt", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.AssignmentRevision", null)
+                        .WithMany()
+                        .HasForeignKey("RevisionId", "AssignmentId")
+                        .HasPrincipalKey("RevisionId", "AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CandidateProgressTracker.Domain.Learning.Submission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId", "AssignmentId")
+                        .HasPrincipalKey("SubmissionId", "AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

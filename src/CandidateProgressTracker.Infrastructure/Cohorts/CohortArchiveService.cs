@@ -1,3 +1,4 @@
+using CandidateProgressTracker.Infrastructure.Learning;
 using System.Data;
 using CandidateProgressTracker.Application.Cohorts;
 using CandidateProgressTracker.Infrastructure.Persistence;
@@ -52,10 +53,12 @@ public class CohortArchiveService : ICohortArchiveService
         await using var transaction = await _db.Database
             .BeginTransactionAsync(IsolationLevel.Serializable);
 
+        await CohortWorkflowGate.LockAsync(_db, cohortId);
+
         var actor = await _userManager.FindByIdAsync(actorUserId);
 
         if (actor is null ||
-            !await _userManager.IsInRoleAsync(actor, "Administrator"))
+            !(await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, actor.Id) && await _userManager.IsInRoleAsync(actor, "Administrator")))
         {
             return Failure("Administrator access is required.");
         }

@@ -1,4 +1,6 @@
+using System.Data;
 using CandidateProgressTracker.Application.Cohorts;
+using CandidateProgressTracker.Infrastructure.Identity;
 using CandidateProgressTracker.Domain.Cohorts;
 using CandidateProgressTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +16,10 @@ public class CohortMembershipQueryService : ICohortMembershipQueryService
         _db = db;
     }
 
-    public async Task<CohortMembershipDetails?> GetAsync(Guid cohortId)
+    public async Task<CohortMembershipDetails?> GetAsync(Guid cohortId, string actorUserId)
     {
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        if (!await AdministratorAccess.IsCurrentAsync(_db, actorUserId)) return null;
         var cohort = await _db.Cohorts
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.CohortId == cohortId);
@@ -101,12 +105,14 @@ public class CohortMembershipQueryService : ICohortMembershipQueryService
             }
         }
 
-        return new CohortMembershipDetails(
+        var result = new CohortMembershipDetails(
             cohort.CohortId,
             cohort.Name,
             cohort.Code,
             cohort.IsArchived,
             memberships,
             eligibleMembers);
+        await transaction.CommitAsync();
+        return result;
     }
 }

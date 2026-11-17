@@ -1,0 +1,14 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Admin.ArchivesModel
+<h1>Archive and historical records</h1>
+@if(TempData["ArchiveSuccess"] is string notice){<div class="alert alert-success" role="status">@notice</div>}
+<p>Archiving keeps history and evidence but hides the work from Candidates and Mentors. Reopening restores eligible access; approved work stays approved unless its approval is separately reopened.</p>
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+@if(Model.Details is {} details){
+<h2>@details.Scope.Kind: @details.Scope.Name</h2><p>@(details.Scope.Archived?"Archived — read-only":"Active")</p>
+<form class="workspace-panel management-form" method="post"><input asp-for="ScopeId" type="hidden" /><input asp-for="Kind" type="hidden" /><input asp-for="Version" type="hidden" /><input asp-for="Archive" type="hidden" /><input asp-for="RequestId" type="hidden" /><label asp-for="Reason">Reason (required)</label><textarea asp-for="Reason" maxlength="1000" required></textarea><button type="submit">@(details.Scope.Archived?"Reopen":"Archive")</button></form>
+<h3>Assignment history</h3><ul>@foreach(var a in details.Assignments){<li><a asp-page="./SubmissionHistory" asp-route-assignmentId="@a.AssignmentId">@a.Title — @a.Owner</a></li>}</ul>
+<h3>Archive audit</h3>@foreach(var e in details.Events){<p>@UserText.Label(e.Action) by @e.Actor at @e.OccurredAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm") SAST: @e.Reason</p><details><summary>Recorded outcomes</summary>@foreach(var theory in new[]{true,false}){var items=e.Outcomes.Where(o=>o.IsCourse==theory&&o.IsRequired).ToList();<p>@(theory?"Theory":"Projects"): @items.Count(o=>o.Approved) / @items.Count required approved at this event.</p>}
+<div class="table-responsive workspace-table" tabindex="0" role="region" aria-label="Scrollable records"><table class="table"><thead><tr><th>Assignment / owner</th><th>Recorded outcome</th><th>Submitted revision</th></tr></thead><tbody>@foreach(var outcome in e.Outcomes){<tr><td><a asp-page="./SubmissionHistory" asp-route-assignmentId="@outcome.AssignmentId">@outcome.Title &middot; @outcome.Owner</a></td><td>@UserText.Label(outcome.Status) (@(outcome.IsRequired?"Required":"Optional"))</td><td>@outcome.RevisionNo</td></tr>}</tbody></table></div></details>}
+}
+<h2>Cycles and projects</h2><ul>@foreach(var scope in Model.Scopes){<li><a asp-route-scopeId="@scope.Id" asp-route-kind="@scope.Kind">@scope.Kind: @scope.Name (@(scope.Archived?"Archived":"Active"))</a></li>}</ul>

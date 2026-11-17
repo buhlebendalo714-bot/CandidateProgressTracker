@@ -69,7 +69,7 @@ public class CreateModel : PageModel
             return Page();
         }
 
-        TempData["SuccessMessage"] = "Cohort created successfully.";
+        TempData["SuccessMessage"] = "Cohort created. You can now add members and learning cycles.";
         return RedirectToPage("./Index");
     }
 }

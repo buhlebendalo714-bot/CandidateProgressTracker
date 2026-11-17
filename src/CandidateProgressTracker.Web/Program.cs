@@ -9,6 +9,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy("Credentials", context => System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions { PermitLimit = builder.Configuration.GetValue<int?>("Authentication:RequestsPerMinute") ?? 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
@@ -57,12 +64,19 @@ builder.Services.AddRazorPages(options =>
 builder.Services.AddScoped<IAccountQueryService, AccountQueryService>();
 
 builder.Services.AddScoped<IAccountCreationService, AccountCreationService>();
+builder.Services.AddScoped<IAccountLifecycleService, AccountLifecycleService>();
+builder.Services.AddScoped<IAuditQueryService, AuditQueryService>();
+builder.Services.AddScoped<IArchivedHistoryService, ArchivedHistoryService>();
+builder.Services.AddScoped<SignInManager<IdentityUser>, CandidateProgressTracker.Web.ActiveAccountSignInManager>();
+builder.Services.Configure<SecurityStampValidatorOptions>(o => o.ValidationInterval = TimeSpan.Zero);
 
 builder.Services.AddScoped<ICohortCreationService, CohortCreationService>();
 
 builder.Services.AddScoped<ICohortQueryService, CohortQueryService>();
 
 builder.Services.AddScoped<ICohortMembershipService, CohortMembershipService>();
+builder.Services.AddScoped<IBulkOnboardingPreviewService, BulkOnboardingPreviewService>();
+builder.Services.AddScoped<IBulkOnboardingImportService, BulkOnboardingImportService>();
 
 builder.Services.AddScoped<ICohortMembershipQueryService, CohortMembershipQueryService>();
 
@@ -92,6 +106,23 @@ builder.Services.AddScoped<IAssignmentRevisionService, AssignmentRevisionService
 
 builder.Services.AddScoped<IAssignmentHistoryQueryService, AssignmentHistoryQueryService>();
 
+builder.Services.AddScoped<IIndividualSubmissionService, IndividualSubmissionService>();
+builder.Services.AddScoped<ITeamSubmissionService, TeamSubmissionService>();
+
+builder.Services.AddScoped<IIndividualSubmissionQueryService, IndividualSubmissionQueryService>();
+builder.Services.AddScoped<IIndividualSubmissionReviewService, IndividualSubmissionReviewService>();
+builder.Services.AddScoped<IAssignmentReopeningService, IndividualSubmissionReviewService>();
+
+builder.Services.Configure<EvidenceOptions>(builder.Configuration.GetSection("Evidence"));
+builder.Services.PostConfigure<EvidenceOptions>(o => o.RepositoryRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "../..")));
+builder.Services.AddSingleton<IPrivateEvidenceStorage, PrivateEvidenceStorage>();
+builder.Services.AddSingleton<IMalwareScanner, DefenderScanner>();
+builder.Services.AddScoped<IFileEvidenceService, FileEvidenceService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<ILearningOverviewService, LearningOverviewService>();
+if (!builder.Environment.IsEnvironment("Testing")) builder.Services.AddHostedService<CandidateProgressTracker.Web.EvidenceWorker>();
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = 53477376);
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 53477376);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -105,8 +136,17 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
+app.Use(async (context, next) =>
+{
+    if(context.User.Identity?.IsAuthenticated==true)
+        context.RequestServices.GetRequiredService<TrackerDbContext>().AuditActorId=context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    await next();
+    if(context.Response.StatusCode is 401 or 403 or 404 || context.Response.StatusCode == 302 && context.Response.Headers.Location.ToString().Contains("/Account/"))
+        app.Logger.LogInformation("Access response {Status} actor {ActorId} path {Path} correlation {CorrelationId}", context.Response.StatusCode, context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, context.Request.Path.Value, context.TraceIdentifier);
+});
 app.UseAuthorization();
 
 app.MapStaticAssets();

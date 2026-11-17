@@ -28,7 +28,7 @@ public class MentorCohortQueryService : IMentorCohortQueryService
             from userRole in _db.UserRoles
             join role in _db.Roles
                 on userRole.RoleId equals role.Id
-            where role.NormalizedName == "MENTOR"
+            where role.NormalizedName == "MENTOR" && !_db.AccountAccessStates.Any(s => s.UserId == userRole.UserId && !s.Enabled)
             select userRole.UserId;
 
         return await _db.Cohorts
@@ -70,7 +70,7 @@ public class MentorCohortQueryService : IMentorCohortQueryService
             from userRole in _db.UserRoles
             join role in _db.Roles
                 on userRole.RoleId equals role.Id
-            where role.NormalizedName == "MENTOR"
+            where role.NormalizedName == "MENTOR" && !_db.AccountAccessStates.Any(s => s.UserId == userRole.UserId && !s.Enabled)
             select userRole.UserId;
 
         // Keep authorization and candidate retrieval in one SQL query.

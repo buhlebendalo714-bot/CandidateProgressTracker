@@ -6,9 +6,11 @@ public class Assignment
 
     public Guid CycleId { get; set; }
 
-    public Guid ProjectId { get; set; }
+    public Guid? ProjectId { get; set; }
 
-    public Guid MilestoneId { get; set; }
+    public Guid? MilestoneId { get; set; }
+
+    public Guid? OfferingId { get; set; }
 
     // Exactly one owner must be populated.
     public string? CandidateId { get; set; }

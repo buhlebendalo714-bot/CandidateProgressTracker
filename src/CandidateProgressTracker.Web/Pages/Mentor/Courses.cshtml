@@ -1,0 +1,13 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Mentor.CoursesModel
+<h1>Cohort course assignments</h1>
+@if (Model.Courses.Count == 0) { <p>No course assignments are available.</p> }
+@foreach (var course in Model.Courses)
+{
+    <section class="card p-3 my-3">
+        <h2 class="h5">@course.Title — @course.Owner</h2>
+        <p>@course.Platform. Due @course.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm") SAST</p>
+        <a asp-page="./SubmissionHistory" asp-route-assignmentId="@course.AssignmentId">Submission history</a>
+        <a asp-page="./ReviewSubmission" asp-route-assignmentId="@course.AssignmentId">Review latest attempt</a>
+    </section>
+}

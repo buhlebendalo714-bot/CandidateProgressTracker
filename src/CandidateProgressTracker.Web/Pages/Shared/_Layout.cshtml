@@ -1,80 +1,40 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CandidateProgressTracker.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/CandidateProgressTracker.Web.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">CandidateProgressTracker.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                        @if (User.IsInRole("Administrator"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                asp-area="" asp-page="/Admin/Index">Administration</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("Mentor"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                asp-area=""
-                                asp-page="/Mentor/Index">
-                                    My cohorts
-                                </a>
-                            </li>
-                        }
-                        @if (User.IsInRole("Candidate"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                asp-area=""
-                                asp-page="/Candidate/Index">
-                                    My cohorts
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CandidateProgressTracker.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+@{
+    var currentPage=ViewContext.RouteData.Values["page"]?.ToString()??"";
+    var signedIn=User.Identity?.IsAuthenticated==true;
+    var area=currentPage.StartsWith("/Candidate/")?"Candidate":currentPage.StartsWith("/Mentor/")?"Mentor":currentPage.StartsWith("/Admin/")?"Admin":User.IsInRole("Administrator")?"Admin":User.IsInRole("Mentor")?"Mentor":"Candidate";
+    var dashboard=signedIn && (currentPage is "/Candidate/Index" or "/Mentor/Index" or "/Admin/Index");
+    var root=signedIn?$"/{area}/Index":"/Index";
+    var areaName=area=="Admin"?"Administration":area=="Mentor"?"Mentoring":"Learning";
+    var names=new Dictionary<string,string>{{"Index","Overview"},{"Courses","Courses & certificates"},{"Assignments","Projects & milestones"},{"Progress","Progress details"},{"SubmissionHistory","Submission history"},{"TeamSubmissionHistory","Team submission history"},{"Submit","Submit evidence"},{"TeamSubmit","Team submission"},{"Processing","Evidence processing"},{"Cycles","Learning cycles"},{"ReviewQueue","Review submissions"},{"ReviewSubmission","Review submission"},{"Archives","Archive & history"},{"Audit","Audit history"},{"Create","Create account"},{"Manage","Manage account"},{"Login","Log in"},{"CompleteCredential","Activate account or reset password"}};
+    var file=currentPage.Split('/').LastOrDefault()??"";
+    if (currentPage=="/Admin/Courses/Index") names["Index"]="Courses and assignments";
+    if (file=="Create" && currentPage.Contains("/Cohorts/")) names["Create"]="Create cohort";
+    var title=ViewData["Title"]?.ToString()??names.GetValueOrDefault(file,file);
+}
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>@title - CAPACITI</title><script type="importmap"></script><link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" /><link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /><link rel="stylesheet" href="~/CandidateProgressTracker.Web.styles.css" asp-append-version="true" /></head>
+<body class="@(signedIn?"has-app-shell":"guest-shell")">
+<a class="skip-link" href="#main-content">Skip to content</a>
+@if(signedIn){
+<aside class="offcanvas-lg offcanvas-start app-sidebar" tabindex="-1" id="app-navigation" aria-labelledby="navigation-title">
+    <div class="sidebar-brand"><a asp-page="@root"><img class="capaciti-logo" src="~/images/CAPACITI-Logo.webp" alt="CAPACITI" width="620" height="113" asp-append-version="true" /></a><span>Learning workspace</span></div>
+    <div class="offcanvas-header"><h2 id="navigation-title">Navigation</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#app-navigation" aria-label="Close navigation"></button></div>
+    <div class="offcanvas-body"><nav aria-label="Main navigation"><partial name="_AppNavigation" /></nav><div class="sidebar-footer"><span>CAPACITI</span><a asp-page="/Privacy">Privacy</a></div></div>
+</aside>
+}
+<div class="app-frame @(dashboard ? "dashboard-workspace" : "")">
+<header class="app-topbar">
+    <div class="topbar-context">
+    @if(signedIn){<button class="btn mobile-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#app-navigation" aria-controls="app-navigation" aria-label="Open navigation"><span aria-hidden="true">&#9776;</span></button><span>@areaName workspace</span>}
+    else{<a class="guest-brand" asp-page="/Index"><img class="capaciti-logo" src="~/images/CAPACITI-Logo.webp" alt="CAPACITI" width="620" height="113" asp-append-version="true" /></a>}
+    </div><partial name="_LoginPartial" />
+</header>
+<main class="app-main" id="main-content" tabindex="-1">
+    <nav aria-label="Breadcrumb" class="app-breadcrumb"><ol><li><a asp-page="@root">@(signedIn?areaName:"Home")</a></li><li aria-current="page">@title</li></ol></nav>
+    @await RenderSectionAsync("PageHeader",required:false)
+    <div class="page-content workspace-page workspace-@area.ToLowerInvariant() page-@file.ToLowerInvariant()">@RenderBody()</div>
+</main>
+<footer class="app-footer"><span>&copy; 2026 CAPACITI</span><a asp-page="/Privacy">Privacy</a></footer>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script><script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script><script src="~/js/site.js" asp-append-version="true"></script>@await RenderSectionAsync("Scripts",required:false)
+</body></html>

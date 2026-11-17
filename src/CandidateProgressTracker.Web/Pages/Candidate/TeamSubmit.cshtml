@@ -1,0 +1,42 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Candidate.TeamSubmitModel
+@{ ViewData["Title"] = "Submit team evidence"; }
+<h1>Submit team evidence</h1>
+<div class="assignment-workspace">
+<aside class="workspace-context"><h2 class="h5">Team members included in this submission</h2>
+<p>@Model.Details.TeamName / @Model.Details.Requirements.MilestoneTitle</p>
+<p>@Model.Details.Eligibility</p>
+<h2 class="h5">@(Model.Details.Roster is null ? "Members to record with the first submission" : "Recorded team members")</h2>
+<p>These members share assignment credit, which does not prove individual contribution. Later attempts keep the same recorded members.</p>
+<ul>@foreach (var member in Model.Details.Preview) { <li>@member.UserName</li> }</ul>
+<p>Requirements revision @Model.Details.Requirements.RevisionNo. Deadline: @Model.Details.Requirements.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss") SAST</p>
+</aside><div class="workspace-main"><section class="workspace-panel"><h2 class="h5">Assigned requirements</h2>
+<h2 class="h6">Instructions</h2><div style="white-space:pre-wrap">@Model.Details.Requirements.Instructions</div>
+<h2 class="h6">Acceptance expectations</h2><div style="white-space:pre-wrap">@Model.Details.Requirements.AcceptanceExpectations</div>
+<h2 class="h6">Evidence requirements</h2><div style="white-space:pre-wrap">@Model.Details.Requirements.EvidencePolicy</div>
+</section>
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<a asp-page="./TeamSubmit" asp-route-assignmentId="@Model.Details.Requirements.AssignmentId">Refresh members and requirements</a>
+<a asp-page="./TeamSubmissionHistory" asp-route-assignmentId="@Model.Details.Requirements.AssignmentId">Team submission history</a>
+@if (Model.Details.CanSubmit)
+{
+    <form class="workspace-panel evidence-form" method="post" enctype="multipart/form-data">
+        <input asp-for="Input.RevisionId" type="hidden" />
+<label for="Files">Files (PDF, PNG or JPEG; up to 5 files, 10 MB each)</label>
+<input type="file" name="Files" id="Files" accept=".pdf,.png,.jpg,.jpeg" multiple />
+<p>Use files, secure web links or both for project evidence. Files are checked before the submission is saved.</p>
+        <input asp-for="Input.RequestId" type="hidden" />
+        <input asp-for="Input.RosterConfirmation" type="hidden" />
+        <label asp-for="Input.Explanation">Explanation</label>
+        <textarea asp-for="Input.Explanation" maxlength="10000" required class="form-control"></textarea>
+        <partial name="_EvidenceLinks" model="Model.Input.Evidence.Count" />
+
+        <button type="submit" class="btn btn-primary mt-3">Confirm members and submit</button>
+    </form>
+}
+
+</div></div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/evidence-links.js" asp-append-version="true"></script>
+}

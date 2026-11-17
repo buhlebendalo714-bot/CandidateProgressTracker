@@ -7,7 +7,7 @@
 <h1>User accounts</h1>
 @if (TempData["SuccessMessage"] is string message)
 {
-    <div class="alert alert-success" role="status">@message</div>
+    <div class="alert alert-success" role="status" aria-atomic="true">@message</div>
 }
 
 <p>
@@ -33,7 +33,7 @@ else
                 @foreach (var account in Model.Accounts)
                 {
                     <tr>
-                        <td>@account.UserName</td>
+                        <td><a asp-page="./Manage" asp-route-userId="@account.UserId">@account.UserName</a></td>
                         <td>@account.Roles</td>
                     </tr>
                 }

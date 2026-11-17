@@ -1,0 +1,35 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Mentor.ReviewQueueModel
+<h1>Review queue</h1>
+<p>Latest saved submissions, oldest first. Processing files are not reviewable; unavailable evidence and self-review block decisions. Former candidates' work remains reviewable within current mentor scope.</p>
+<form class="workspace-panel filter-form" method="get">
+<label for="cohortId">Cohort</label><select name="cohortId" id="cohortId"><option value="">All assigned cohorts</option>
+@foreach(var cohort in Model.Queue.Cycles.DistinctBy(c=>c.CohortId)) { <option value="@cohort.CohortId" selected="@(cohort.CohortId==Model.Queue.Filter.CohortId)">@cohort.CohortName</option> }
+</select><label for="cycleId">Cycle</label><select name="cycleId" id="cycleId"><option value="">All assigned cycles</option>
+@foreach(var cycle in Model.Queue.Cycles) { <option value="@cycle.CycleId" selected="@(cycle.CycleId==Model.Queue.Filter.CycleId)">@cycle.CohortName / @cycle.Name</option> }
+</select>
+<label for="status">Review status</label><select name="status" id="status">
+@foreach(var status in new[]{"Awaiting review","Changes requested","Approved","Requirements changed","All"}) { <option selected="@(status==Model.Queue.Filter.Status)">@status</option> }
+</select>
+<label for="projectId">Project</label><select name="projectId" id="projectId"><option value="">All projects</option>
+@foreach(var project in Model.Queue.Projects) { <option value="@project.Id" selected="@(project.Id==Model.Queue.Filter.ProjectId)">@project.Name</option> }
+</select>
+<label for="offeringId">Course</label><select name="offeringId" id="offeringId"><option value="">All courses</option>
+@foreach(var course in Model.Queue.Offerings) { <option value="@course.Id" selected="@(course.Id==Model.Queue.Filter.OfferingId)">@course.Name</option> }
+</select>
+<button>Filter</button></form>
+@if(Model.Queue.Rows.Count==0) { <p>No submissions match these filters.</p> }
+@foreach(var row in Model.Queue.Rows)
+{
+<section class="card p-3 my-2"><h2 class="h5">@row.Owner / @row.Title</h2><p>@row.Group / @UserText.Label(row.Status) @(row.IsTeam ? "(shared team attempt)" : "")</p>
+<p>Received @row.ReceivedAt?.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss") SAST</p>
+<a asp-page="./SubmissionHistory" asp-route-assignmentId="@row.AssignmentId">History</a>
+@if(row.CanReview) { <a asp-page="./ReviewSubmission" asp-route-assignmentId="@row.AssignmentId">Review latest attempt</a> }
+else { <p>A new decision is unavailable; open history for details.</p> }
+</section>
+}
+<nav aria-label="Review queue pages">
+@if(Model.Queue.Filter.Page>1) { <a asp-route-pageNumber="@(Model.Queue.Filter.Page-1)" asp-route-cohortId="@Model.Queue.Filter.CohortId" asp-route-cycleId="@Model.Queue.Filter.CycleId" asp-route-projectId="@Model.Queue.Filter.ProjectId" asp-route-offeringId="@Model.Queue.Filter.OfferingId" asp-route-status="@Model.Queue.Filter.Status">Previous</a> }
+<span>Page @Model.Queue.Filter.Page</span>
+@if(Model.Queue.HasNextPage) { <a asp-route-pageNumber="@(Model.Queue.Filter.Page+1)" asp-route-cohortId="@Model.Queue.Filter.CohortId" asp-route-cycleId="@Model.Queue.Filter.CycleId" asp-route-projectId="@Model.Queue.Filter.ProjectId" asp-route-offeringId="@Model.Queue.Filter.OfferingId" asp-route-status="@Model.Queue.Filter.Status">Next</a> }
+</nav>

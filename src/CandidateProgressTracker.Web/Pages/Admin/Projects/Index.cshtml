@@ -13,7 +13,7 @@
 
 @if (TempData["SuccessMessage"] is string message)
 {
-    <div class="alert alert-success" role="status">@message</div>
+    <div class="alert alert-success" role="status" aria-atomic="true">@message</div>
 }
 
 <div asp-validation-summary="All"
@@ -32,7 +32,7 @@ else
 
     <form method="post"
           asp-route-cycleId="@Model.Cycle.CycleId"
-          class="mb-4">
+          class="workspace-panel management-form mb-4">
         <div class="mb-3">
             <label asp-for="Input.Title" class="form-label"></label>
             <input asp-for="Input.Title"

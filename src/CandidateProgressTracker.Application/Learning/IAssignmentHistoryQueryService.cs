@@ -19,7 +19,10 @@ public record AssignmentHistoryPage(
     bool IsArchived,
     IReadOnlyList<AssignmentHistoryEntry> Revisions,
     int PageNumber,
-    bool HasNextPage);
+    bool HasNextPage)
+{
+    public Guid CycleId { get; init; }
+}
 
 public interface IAssignmentHistoryQueryService
 {

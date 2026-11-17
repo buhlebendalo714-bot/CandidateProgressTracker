@@ -1,56 +1,54 @@
 @page
 @model CandidateProgressTracker.Web.Pages.Mentor.IndexModel
 @{
-    ViewData["Title"] = "My cohorts";
+    ViewData["Title"] = "Mentor workspace";
+    var selected = Model.Overview.Cycles.FirstOrDefault(c => c.CycleId == Model.Overview.SelectedCycle);
+    var next = Model.Pending.FirstOrDefault();
 }
-
-<h1>My cohorts</h1>
-<p>
-    <a asp-page="./Assignments" class="btn btn-outline-primary">
-        Cohort assignments
-    </a>
-</p>
-
-<p>Your current mentor assignments in unarchived cohorts.</p>
-
-@if (Model.Cohorts.Count == 0)
-{
-    <div class="alert alert-info" role="status">
-        You have no current cohort assignments.
-        Contact your administrator if you expected to see a cohort.
-    </div>
+@section PageHeader {
+<div class="page-heading">
+    <div><p class="eyebrow">Mentoring workspace</p><h1>Guide the next step</h1><p class="page-description">Review submitted work and follow progress in your assigned cohorts.</p></div>
+    @if (next is not null) { <a class="btn btn-primary" asp-page="./ReviewSubmission" asp-route-assignmentId="@next.AssignmentId">Review oldest eligible work <span aria-hidden="true">&rarr;</span></a> }
+    else { <a class="btn btn-primary" asp-page="./ReviewQueue" asp-route-cycleId="@Model.Overview.SelectedCycle">Open review queue <span aria-hidden="true">&rarr;</span></a> }
+</div>
 }
-else
-{
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Code</th>
-                    <th scope="col">Location</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var cohort in Model.Cohorts)
-                {
-                    <tr>
-                        <td>
-                            <a asp-page="./Cohort" asp-route-id="@cohort.CohortId">
-                                @cohort.Name
-                            </a>
-
-                            <span class="mx-2">|</span>
-
-                            <a asp-page="./Cycles" asp-route-id="@cohort.CohortId">
-                                Learning cycles
-                            </a>
-                        </td>
-                        <td>@cohort.Code</td>
-                        <td>@(cohort.LocationLabel ?? "Not specified")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
+<div class="dashboard-context">
+    <div><span class="context-label">@(selected?.CohortName ?? "Your cohorts")</span><p>@(selected?.Name ?? "No active learning cycle")</p></div>
+    @if (Model.Overview.Cycles.Count > 0) {
+    <form method="get" class="workspace-panel filter-form cycle-filter"><label for="cycleId">Learning cycle</label><div><select id="cycleId" name="cycleId">@foreach (var c in Model.Overview.Cycles) { <option value="@c.CycleId" selected="@(c.CycleId == Model.Overview.SelectedCycle)">@c.CohortName / @c.Name</option> }</select><button type="submit" class="btn btn-outline-primary">Show</button></div></form>
+    }
+</div>
+<div class="dashboard-columns">
+<section class="work-panel" aria-labelledby="review-title">
+    <div class="section-heading"><div><p class="eyebrow">Your next reviews</p><h2 id="review-title">Awaiting mentor review</h2></div><a asp-page="./ReviewQueue" asp-route-cycleId="@Model.Overview.SelectedCycle">Full review queue</a></div>
+    <p class="section-description">Oldest submissions ready for review appear first. Processing evidence and self-review are excluded from these actions.</p>
+    @if (Model.Pending.Count == 0) { <div class="empty-state"><h3>No eligible work waiting</h3><p>The full queue includes submissions where a decision is unavailable.</p></div> }
+    <ol class="action-list">
+    @foreach (var row in Model.Pending) {
+        <li class="mentor-review" data-assignment-id="@row.AssignmentId"><div class="work-meta"><span class="status-label status-upcoming">Awaiting review</span><span>@(row.IsCourse ? "Theory" : row.IsTeam ? "Team project" : "Project")</span></div><h3><a asp-page="./ReviewSubmission" asp-route-assignmentId="@row.AssignmentId">@row.Title</a></h3><p class="work-group">@row.Owner / @row.Group</p><div class="work-bottom"><span>Received @row.ReceivedAt?.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy, HH:mm") SAST</span><a asp-page="./ReviewSubmission" asp-route-assignmentId="@row.AssignmentId">Review attempt <span aria-hidden="true">&rarr;</span></a></div></li>
+    }
+    </ol>
+    @if (Model.MorePending) { <p class="panel-note">More work is available in the full review queue.</p> }
+</section>
+<section class="feedback-panel" aria-labelledby="changes-title">
+    <div class="section-heading"><h2 id="changes-title">Awaiting candidate changes</h2></div>
+    <p class="section-description">Feedback has been sent. A new attempt is needed before another decision.</p>
+    @if (Model.Changes.Count == 0) { <p class="empty-state">No changes-requested work in this cycle.</p> }
+    @foreach (var row in Model.Changes) {
+        <article class="feedback-item mentor-changes"><p class="feedback-decision">Changes requested</p><h3>@row.Title</h3><p class="work-group">@row.Owner / @row.Group</p><a asp-page="./SubmissionHistory" asp-route-assignmentId="@row.AssignmentId">Read feedback and history</a></article>
+    }
+    <a asp-page="./ReviewQueue" asp-route-cycleId="@Model.Overview.SelectedCycle" asp-route-status="Changes requested">View all candidate changes <span aria-hidden="true">&rarr;</span></a>
+</section>
+</div>
+<section class="history-panel" aria-labelledby="cohort-progress-title">
+    <div class="section-heading"><div><h2 id="cohort-progress-title">Cohort progress</h2><p class="section-description">Required assignments with effective approval, for current candidates in this cycle.</p></div><a asp-page="./Progress" asp-route-cycleId="@Model.Overview.SelectedCycle">Full progress details</a></div>
+    @if (Model.Overview.Candidates.Count == 0) { <p class="empty-state">No current candidates in this cycle.</p> }
+    else {
+    <div class="table-responsive"><table class="table dashboard-table"><thead><tr><th scope="col">Candidate</th><th scope="col">Theory approved</th><th scope="col">Projects approved</th><th scope="col">Awaiting review</th><th scope="col">Changes requested</th></tr></thead><tbody>
+    @foreach (var c in Model.Overview.Candidates.Take(8)) { <tr><th scope="row">@c.Name</th><td>@c.Theory.Approved / @c.Theory.Required</td><td>@c.Projects.Approved / @c.Projects.Required</td><td>@(c.Theory.Pending + c.Projects.Pending)</td><td>@(c.Theory.ChangesRequested + c.Projects.ChangesRequested)</td></tr> }
+    </tbody></table></div>
+    @if (Model.Overview.Candidates.Count > 8) { <p class="panel-note">Showing the first eight candidates. Open progress details for everyone.</p> }
+    }
+    <p class="panel-note"><a asp-page="./Courses">Browse course work</a> <span aria-hidden="true">&middot;</span> <a asp-page="./Assignments">Browse project work</a></p>
+</section>
+<details class="learning-context"><summary>Your assigned cohorts</summary><ul>@foreach (var cohort in Model.Cohorts) { <li><a asp-page="./Cohort" asp-route-id="@cohort.CohortId">@cohort.Name (@cohort.Code)</a><a asp-page="./Cycles" asp-route-id="@cohort.CohortId">Learning cycles</a></li> }</ul>@if (Model.Cohorts.Count == 0) { <p>You have no current cohort assignments. Contact your administrator if you expected a cohort.</p> }</details>

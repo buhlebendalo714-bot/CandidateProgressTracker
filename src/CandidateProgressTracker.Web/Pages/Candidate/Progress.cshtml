@@ -1,0 +1,20 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Candidate.ProgressModel
+<h1>My learning overview</h1>
+<form class="workspace-panel filter-form" method="get"><label for="cycleId">Cycle</label><select name="cycleId" id="cycleId">
+@foreach(var cycle in Model.Overview.Cycles) { <option value="@cycle.CycleId" selected="@(cycle.CycleId==Model.Overview.SelectedCycle)">@cycle.CohortName / @cycle.Name</option> }
+</select><button>Show cycle</button></form>
+<section class="workspace-panel progress-breakdown"><div><h2 class="h5">Theory</h2><partial name="_ProgressTotals" model="Model.Overview.Theory" /></div>
+<div><h2 class="h5">Projects</h2><partial name="_ProgressTotals" model="Model.Overview.Projects" /></div>
+</section><p>Each required assignment counts equally. Only an approval that has not been reopened counts as complete; optional work does not affect the percentage. Team credit is shared, not proof of individual contribution, and requires current access and inclusion in the recorded members.</p>
+@if(Model.Overview.Assignments.Count==0) { <p>No assignments for this cycle.</p> }
+@foreach(var item in Model.Overview.Assignments)
+{
+<section class="card p-3 my-2"><h2 class="h5">@item.Title</h2><p>@item.Group / @UserText.Label(item.Status) @(item.IsTeam ? "(team outcome)" : "")</p>
+<p>Due @item.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm") SAST. @(item.IsRequired ? "Required" : "Optional")</p>
+@if(!item.CountsForProgress) { <p>You can view this team work, but you are not among its recorded members. It does not count towards your progress.</p> }
+@if(item.CountsForProgress && item.NeedsCandidateAction) { <p>@(item.DueAt<DateTimeOffset.UtcNow ? "Overdue candidate action" : "Upcoming candidate action")</p> }
+<a asp-page="@(item.IsTeam ? "./TeamSubmissionHistory" : "./SubmissionHistory")" asp-route-assignmentId="@item.AssignmentId">History and feedback</a>
+@if(item.CanSubmit) { <a asp-page="@(item.IsTeam ? "./TeamSubmit" : "./Submit")" asp-route-assignmentId="@item.AssignmentId">Requirements and submission</a> }
+</section>
+}

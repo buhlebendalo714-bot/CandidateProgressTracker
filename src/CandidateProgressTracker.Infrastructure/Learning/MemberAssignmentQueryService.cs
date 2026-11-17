@@ -44,7 +44,7 @@ public class MemberAssignmentQueryService : IMemberAssignmentQueryService
             from userRole in _db.UserRoles
             join role in _db.Roles
                 on userRole.RoleId equals role.Id
-            where role.NormalizedName == roleName
+            where role.NormalizedName == roleName && !_db.AccountAccessStates.Any(s => s.UserId == userRole.UserId && !s.Enabled)
             select userRole.UserId;
 
         if (!await roleHolders.ContainsAsync(userId))

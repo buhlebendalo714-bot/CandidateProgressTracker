@@ -1,0 +1,17 @@
+@page "{id:guid}"
+@model CandidateProgressTracker.Web.Pages.Admin.Cohorts.OnboardingBatchModel
+@{ ViewData["Title"]="Onboarding batch"; }
+<h1>Onboarding batch</h1>
+<p><a asp-page="./Index">Back to cohorts</a></p>
+<p><a asp-page-handler="Export" asp-route-id="@Model.Result.BatchId">Download results CSV</a> · <a asp-page="/Admin/Audit" asp-route-Record="@Model.Result.BatchId">Batch audit history</a></p>
+<p role="status" aria-atomic="true">@(Model.Result.Complete ? "Onboarding complete." : "Onboarding paused. Completed rows are saved; review the row messages before resuming.")</p>
+@if(Model.Result.Message is not null) { <div class="alert alert-warning" role="alert">@Model.Result.Message</div> }
+<div class="workspace-table"><table class="table">
+<thead><tr><th>CSV row</th><th>UserName</th><th>Status</th><th>Details</th><th>Account handoff</th></tr></thead><tbody>
+@foreach(var row in Model.Result.Rows) { <tr><td>@row.Row</td><td>@row.UserName</td><td>@UserText.Label(row.Status)</td><td>@row.Message</td><td>@if(row.UserId is not null){<a asp-page="/Admin/Users/Manage" asp-route-UserId="@row.UserId">@(row.Status=="Created" ? "Manage account / issue activation" : "Manage account")</a>}else{<span>Available after successful processing</span>}</td></tr> }
+</tbody></table></div>
+@if(!Model.Result.Complete)
+{
+    <form method="post"><p>Only unfinished rows are retried. Your permission and the cohort are checked again for each candidate.</p><button class="btn btn-primary" type="submit">Resume unfinished rows</button></form>
+}
+<p>Open each new account to create an activation code. No codes or emails were sent by this batch.</p>

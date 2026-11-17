@@ -1,20 +1,37 @@
 @page
-@if (TempData["SuccessMessage"] is string message)
-{
-    <div class="alert alert-success" role="status">@message</div>
-}
 @model CandidateProgressTracker.Web.Pages.Admin.IndexModel
-@{
-    ViewData["Title"] = "Administration";
+@{ ViewData["Title"] = "Administration"; }
+@section PageHeader {
+<div class="page-heading"><div><p class="eyebrow">Administration workspace</p><h1>Support people and learning</h1><p class="page-description">Manage access, organise learning and trace the decisions behind it.</p></div><a class="btn btn-primary" asp-page="./Users/Index">Manage accounts <span aria-hidden="true">&rarr;</span></a></div>
 }
-
-<h1>Administration</h1>
-<p>You are signed in with administrator access.</p>
-
-<a asp-page="/Admin/Users/Index" class="btn btn-primary">
-    Manage user accounts
-</a>
-
-<a asp-page="/Admin/Cohorts/Index" class="btn btn-outline-primary">
-    Manage cohorts
-</a>
+@if (TempData["SuccessMessage"] is string message) { <div class="alert alert-success" role="status" aria-atomic="true">@message</div> }
+<div class="admin-workspace">
+<section class="work-panel admin-people" aria-labelledby="people-title">
+    <div class="section-heading"><div><p class="eyebrow">People</p><h2 id="people-title">Accounts and access</h2></div></div>
+    <p class="section-description">Create accounts, manage roles and create activation or password reset codes.</p>
+    <div class="management-row"><div><h3><a asp-page="./Users/Index">Manage user accounts</a></h3><p>Search existing accounts and manage their access.</p></div><a asp-page="./Users/Create">Create account <span aria-hidden="true">&rarr;</span></a></div>
+    <div class="management-row"><div><h3><a asp-page="./Cohorts/Index">Manage cohorts and memberships</a></h3><p>Assign candidates and mentors to the right cohort.</p></div></div>
+</section>
+<section class="work-panel admin-learning" aria-labelledby="learning-title">
+    <div class="section-heading"><div><p class="eyebrow">Learning</p><h2 id="learning-title">Courses and projects</h2></div><a asp-page="./Cohorts/Index">All cohorts</a></div>
+    <p class="section-description">Choose a cohort, then open a cycle's courses or projects. Archived records are available under Governance.</p>
+    @if (Model.Cohorts.Count > 0) {
+    <form method="get" class="workspace-panel filter-form cycle-filter admin-cohort-filter"><label for="cohortId">Cohort</label><div><select id="cohortId" name="cohortId">@foreach (var c in Model.Cohorts) { <option value="@c.CohortId" selected="@(c.CohortId == Model.Selected?.CohortId)">@c.Name (@c.Code)</option> }</select><button class="btn btn-outline-primary" type="submit">Show</button></div></form>
+    }
+    @if (Model.Selected is not null) {
+        <div class="section-heading learning-cycle-heading"><h3>@Model.Selected.CohortName</h3><a asp-page="./Cohorts/Cycles" asp-route-id="@Model.Selected.CohortId">Manage learning cycles</a></div>
+        var cycles = Model.Selected.Cycles.Where(c => !c.IsArchived).ToList();
+        @if (cycles.Count == 0) { <p class="empty-state">No active cycles. Create a learning cycle to organise courses and projects.</p> }
+        <ul class="cycle-directory">@foreach (var c in cycles) { <li><div><h3>@c.Name</h3><p>@c.StartsOn.ToString("dd MMM yyyy") &ndash; @c.EndsOn.ToString("dd MMM yyyy")</p></div><div class="cycle-actions"><a asp-page="./Courses/Index" asp-route-cycleId="@c.CycleId" aria-label="Courses for @c.Name">Courses</a><a asp-page="./Projects/Index" asp-route-cycleId="@c.CycleId" aria-label="Projects for @c.Name">Projects</a></div></li> }</ul>
+    }
+    else { <p class="empty-state">Create a cohort to start organising learning.</p> }
+</section>
+<section class="work-panel admin-governance" aria-labelledby="governance-title">
+    <div class="section-heading"><div><p class="eyebrow">Governance</p><h2 id="governance-title">History and accountability</h2></div></div>
+    <div class="management-row"><div><h3><a asp-page="./Archives">Archived history</a></h3><p>Read retained learning records, evidence and decisions.</p></div></div>
+    <div class="management-row"><div><h3><a asp-page="./Audit">Search audit history</a></h3><p>Trace changes by actor, action, record and date.</p></div></div>
+    <h3 class="activity-heading">Recent recorded activity</h3>
+    @if (Model.Recent.Count == 0) { <p class="empty-state">No recorded audit activity yet.</p> }
+    <ol class="activity-list">@foreach (var row in Model.Recent) { <li><p>@UserText.Label(row.EntityType) <span>@(row.DisplayAction ?? UserText.AuditAction(row.EntityType,row.Action))</span></p><time datetime="@row.OccurredAt.ToString("O")">@row.OccurredAt.ToOffset(TimeSpan.FromHours(2)).ToString("dd MMM yyyy, HH:mm") SAST</time></li> }</ol>
+</section>
+</div>

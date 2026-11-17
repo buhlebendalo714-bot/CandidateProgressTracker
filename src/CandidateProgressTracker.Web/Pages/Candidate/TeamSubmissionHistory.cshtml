@@ -1,0 +1,9 @@
+@page "{assignmentId:guid}"
+@model CandidateProgressTracker.Web.Pages.Candidate.TeamSubmissionHistoryModel
+@{ ViewData["Title"] = "Team submission history"; }
+<h1>Team submission history</h1>
+<p>@Model.History.ProjectTitle / @Model.History.MilestoneTitle</p>
+@if (TempData["TeamSubmissionSuccess"] is string success) { <p class="alert alert-success" role="status" aria-atomic="true">@success</p> }
+<p>@Model.History.Eligibility</p>
+<a asp-page="./TeamSubmit" asp-route-assignmentId="@Model.History.AssignmentId">Submission eligibility and roster</a>
+<partial name="_SubmissionHistory" model="Model.History" />

@@ -56,7 +56,7 @@ public class AccountCreationTests
         var db = scope.ServiceProvider
             .GetRequiredService<TrackerDbContext>();
 
-        Assert.Equal(0, await db.Users.CountAsync());
+        Assert.Equal(0, await db.Users.CountAsync(u => u.Id != database.AccountAdministratorId));
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class AccountCreationTests
         var users = scope.ServiceProvider
             .GetRequiredService<UserManager<IdentityUser>>();
 
-        Assert.Equal(1, await users.Users.CountAsync());
+        Assert.Equal(1, await users.Users.CountAsync(u => u.Id != database.AccountAdministratorId));
 
         var user = await users.FindByNameAsync("duplicate.user");
         Assert.NotNull(user);
@@ -109,7 +109,7 @@ public class AccountCreationTests
         var db = scope.ServiceProvider
             .GetRequiredService<TrackerDbContext>();
 
-        Assert.Equal(0, await db.Users.CountAsync());
+        Assert.Equal(0, await db.Users.CountAsync(u => u.Id != database.AccountAdministratorId));
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class AccountCreationTests
         var db = verificationScope.ServiceProvider
             .GetRequiredService<TrackerDbContext>();
 
-        Assert.Equal(0, await db.Users.CountAsync());
-        Assert.Equal(0, await db.UserRoles.CountAsync());
+        Assert.Equal(0, await db.Users.CountAsync(u => u.Id != database.AccountAdministratorId));
+        Assert.Equal(0, await db.UserRoles.CountAsync(u => u.UserId != database.AccountAdministratorId));
     }
 }

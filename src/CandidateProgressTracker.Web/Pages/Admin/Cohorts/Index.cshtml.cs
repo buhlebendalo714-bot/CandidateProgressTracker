@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using CandidateProgressTracker.Application.Cohorts;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CandidateProgressTracker.Web.Pages.Admin.Cohorts;
@@ -15,8 +17,11 @@ public class IndexModel : PageModel
     public IReadOnlyList<CohortSummary> Cohorts { get; private set; }
         = Array.Empty<CohortSummary>();
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
-        Cohorts = await _cohortQueryService.GetCohortsAsync();
+        var cohorts = await _cohortQueryService.GetCohortsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
+        if (cohorts is null) return Forbid();
+        Cohorts = cohorts;
+        return Page();
     }
 }

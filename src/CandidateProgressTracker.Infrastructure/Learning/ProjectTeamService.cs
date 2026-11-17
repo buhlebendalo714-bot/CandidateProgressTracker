@@ -43,7 +43,7 @@ public class ProjectTeamService : IProjectTeamService
         var user = await _users.FindByIdAsync(actorId);
 
         return user is not null &&
-            await _users.IsInRoleAsync(user, "Administrator");
+            (await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, user.Id) && await _users.IsInRoleAsync(user, "Administrator"));
     }
 
     private Task<Parent?> GetParentAsync(Guid projectId)
@@ -122,7 +122,7 @@ public class ProjectTeamService : IProjectTeamService
                 from userRole in _db.UserRoles
                 join role in _db.Roles
                     on userRole.RoleId equals role.Id
-                where role.NormalizedName == "CANDIDATE"
+                where role.NormalizedName == "CANDIDATE" && !_db.AccountAccessStates.Any(s => s.UserId == userRole.UserId && !s.Enabled)
                 select userRole.UserId;
 
             eligible = await _db.Users
@@ -215,6 +215,8 @@ public class ProjectTeamService : IProjectTeamService
             await _db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable);
 
+        await CohortWorkflowGate.ForProjectAsync(_db, projectId);
+
         if (!await IsAdministratorAsync(actorUserId))
         {
             return Failure("Administrator access is required.");
@@ -297,6 +299,8 @@ public class ProjectTeamService : IProjectTeamService
             await _db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable);
 
+        await CohortWorkflowGate.ForProjectAsync(_db, projectId);
+
         if (!await IsAdministratorAsync(actorUserId))
         {
             return Failure("Administrator access is required.");
@@ -326,7 +330,7 @@ public class ProjectTeamService : IProjectTeamService
         var candidate = await _users.FindByIdAsync(candidateId);
 
         if (candidate is null ||
-            !await _users.IsInRoleAsync(candidate, "Candidate"))
+            !(await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, candidate.Id) && await _users.IsInRoleAsync(candidate, "Candidate")))
         {
             return Failure(
                 "The selected user must have the Candidate role.");
@@ -434,6 +438,8 @@ public class ProjectTeamService : IProjectTeamService
         await using var transaction =
             await _db.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable);
+
+        await CohortWorkflowGate.ForProjectAsync(_db, projectId);
 
         if (!await IsAdministratorAsync(actorUserId))
         {

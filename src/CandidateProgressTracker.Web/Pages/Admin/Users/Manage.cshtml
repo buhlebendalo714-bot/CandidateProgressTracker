@@ -1,0 +1,17 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Admin.Users.ManageModel
+<h1>Manage @Model.Account?.UserName</h1>
+<p>Status: @(Model.Account?.Enabled==true?"Active":"Inactive — activation required")</p>
+@if(Model.Message is {} message && Model.Receipt is null){<div class="alert alert-success" role="status" aria-atomic="true">@message</div>}
+@if(Model.Receipt is {} receipt){<partial name="_CredentialReceipt" model="receipt" />}
+<form class="workspace-panel management-form" method="post">
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<input asp-for="UserId" type="hidden" /><input asp-for="Version" type="hidden" />
+<label asp-for="Email">Email</label><input asp-for="Email" type="email" maxlength="256" />
+<label asp-for="Roles">Roles</label><select asp-for="Roles" multiple><option>Candidate</option><option>Mentor</option><option>Administrator</option></select>
+<label asp-for="Reason">Reason (required)</label><textarea asp-for="Reason" maxlength="1000" required></textarea>
+<button name="Operation" value="Update">Save profile/roles</button>
+@if(Model.Account?.Enabled==true){<button name="Operation" value="Recovery">Create password reset code (1 hour)</button><button name="Operation" value="Deactivate">Deactivate</button>}
+else{<button name="Operation" value="Activation">Create activation code (24 hours)</button>}
+</form>
+<p>Deactivation keeps all history. An activation code enables access only after the account holder sets a password; it does not restore ended memberships.</p>

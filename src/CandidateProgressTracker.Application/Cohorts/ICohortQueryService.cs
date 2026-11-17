@@ -20,7 +20,7 @@ public record CohortDetails(
 
 public interface ICohortQueryService
 {
-    Task<IReadOnlyList<CohortSummary>> GetCohortsAsync();
+    Task<IReadOnlyList<CohortSummary>?> GetCohortsAsync(string actorUserId);
 
-    Task<CohortDetails?> GetAsync(Guid cohortId);
+    Task<CohortDetails?> GetAsync(Guid cohortId, string actorUserId);
 }

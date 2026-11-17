@@ -1,0 +1,14 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Mentor.ProgressModel
+<h1>Cohort learning overview</h1>
+<form class="workspace-panel filter-form" method="get"><label for="cycleId">Cohort / cycle</label><select name="cycleId" id="cycleId">
+@foreach(var cycle in Model.Overview.Cycles) { <option value="@cycle.CycleId" selected="@(cycle.CycleId==Model.Overview.SelectedCycle)">@cycle.CohortName / @cycle.Name</option> }
+</select><button>Show cycle</button></form>
+<p>Current cohort candidates. Needs attention means overdue candidate action or changes requested; awaiting review is separate. Team credit follows current access and the frozen roster.</p>
+<a asp-page="./ReviewQueue" asp-route-cycleId="@Model.Overview.SelectedCycle">Review queue for this cycle</a>
+@if(Model.Overview.Candidates.Count==0) { <p>No current candidates for this cycle.</p> }
+@foreach(var candidate in Model.Overview.Candidates)
+{
+<section class="card p-3 my-2"><h2 class="h5">@candidate.Name</h2><h3 class="h6">Theory</h3><partial name="_ProgressTotals" model="candidate.Theory" />
+<h3 class="h6">Projects</h3><partial name="_ProgressTotals" model="candidate.Projects" /></section>
+}

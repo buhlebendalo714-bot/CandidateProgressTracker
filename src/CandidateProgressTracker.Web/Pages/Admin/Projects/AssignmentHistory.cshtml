@@ -5,9 +5,10 @@
 }
 
 <h1>Assignment history</h1>
+<a asp-page="./ReopenAssignment" asp-route-assignmentId="@Model.History.AssignmentId">Review approval and reopening history</a>
 
 <p>
-    Milestone: <strong>@Model.History.MilestoneTitle</strong><br />
+    Assignment: <strong>@Model.History.MilestoneTitle</strong><br />
     Assigned to: <strong>@Model.History.OwnerName</strong>
 </p>
 
@@ -102,8 +103,13 @@ else
     }
 </nav>
 
+@if (Model.History.MilestoneId == Guid.Empty)
+{ <a asp-page="/Admin/Courses/Index" asp-route-cycleId="@Model.History.CycleId">Back to course assignments</a> }
+else
+{
 <a asp-page="./Assignments"
    asp-route-milestoneId="@Model.History.MilestoneId"
    class="btn btn-secondary">
     Back to assignments
 </a>
+}

@@ -1,3 +1,4 @@
+using CandidateProgressTracker.Infrastructure.Learning;
 using System.Data;
 using CandidateProgressTracker.Application.Cohorts;
 using CandidateProgressTracker.Domain.Cohorts;
@@ -66,10 +67,12 @@ public class CohortMembershipService : ICohortMembershipService
         await using var transaction = await _db.Database
             .BeginTransactionAsync(IsolationLevel.Serializable);
 
+        await CohortWorkflowGate.LockAsync(_db, cohortId);
+
         var actor = await _userManager.FindByIdAsync(actorUserId);
 
         if (actor is null ||
-            !await _userManager.IsInRoleAsync(actor, "Administrator"))
+            !(await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, actor.Id) && await _userManager.IsInRoleAsync(actor, "Administrator")))
         {
             return Failure("Administrator access is required.");
         }
@@ -94,7 +97,7 @@ public class CohortMembershipService : ICohortMembershipService
             return Failure("The selected user was not found.");
         }
 
-        if (!await _userManager.IsInRoleAsync(member, requiredRole))
+        if (!(await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, member.Id) && await _userManager.IsInRoleAsync(member, requiredRole)))
         {
             return Failure(
                 $"The selected user must have the {requiredRole} role.");

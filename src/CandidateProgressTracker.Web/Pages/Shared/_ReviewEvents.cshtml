@@ -1,0 +1,19 @@
+@model CandidateProgressTracker.Application.Learning.SubmissionHistoryAttempt
+            <h3 class="h6">Review history</h3>
+            @if (Model.Reviews.Count == 0) { <p>No review decisions recorded.</p> }
+            @foreach (var review in Model.Reviews)
+            {
+                <section class="review-event border p-2 mb-2">
+                    <h4 class="h6">Review @review.ReviewNo: @UserText.Label(review.Decision)</h4>
+                    <p>@UserText.Label(review.Status)</p>
+                    <p>Reviewer: @review.ReviewerName — @review.DecidedAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss") SAST</p>
+                    <details><summary>Decision reference</summary>@review.ReviewId</details>
+                    <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@review.Feedback</div>
+                    @if (review.Reopening is not null)
+                    {
+                        <p>Reopened by @review.Reopening.AdministratorName — @review.Reopening.ReopenedAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm:ss") SAST</p>
+                        <div style="white-space: pre-wrap; overflow-wrap: anywhere;">@review.Reopening.Reason</div>
+                        <details><summary>Reopening reference</summary>@review.Reopening.ReopeningId</details>
+                    }
+                </section>
+            }

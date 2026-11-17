@@ -69,7 +69,7 @@ else if (Model.CanSubmit)
         remain unchanged. There is currently no restore option.
     </div>
 
-    <form method="post" asp-route-id="@Model.Cohort.CohortId">
+    <form class="workspace-panel management-form" method="post" asp-route-id="@Model.Cohort.CohortId">
         <input type="hidden" asp-for="Input.RowVersion" />
 
         <div class="mb-3">

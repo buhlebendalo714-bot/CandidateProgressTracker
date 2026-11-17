@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CandidateProgressTracker.Application.Cohorts;
+using CandidateProgressTracker.Application.Learning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,29 +8,38 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace CandidateProgressTracker.Web.Pages.Mentor;
 
 [Authorize(Policy = "MentorOnly")]
-public class IndexModel : PageModel
+public sealed class IndexModel(IMentorCohortQueryService cohorts, ILearningOverviewService learning) : PageModel
 {
-    private readonly IMentorCohortQueryService _queryService;
+    public IReadOnlyList<CohortSummary> Cohorts { get; private set; } = [];
+    public MentorOverview Overview { get; private set; } = null!;
+    public IReadOnlyList<ProgressAssignment> Pending { get; private set; } = [];
+    public IReadOnlyList<ProgressAssignment> Changes { get; private set; } = [];
+    public bool MorePending { get; private set; }
 
-    public IndexModel(IMentorCohortQueryService queryService)
+    public async Task<IActionResult> OnGetAsync(Guid? cycleId)
     {
-        _queryService = queryService;
-    }
-
-    public IReadOnlyList<CohortSummary> Cohorts { get; private set; }
-        = Array.Empty<CohortSummary>();
-
-    public async Task<IActionResult> OnGetAsync()
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrWhiteSpace(userId))
+        var actor = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(actor)) return Challenge();
+        var overview = await learning.GetMentorAsync(actor, cycleId);
+        if (overview is null) return NotFound();
+        Overview = overview;
+        Cohorts = await cohorts.GetMyCohortsAsync(actor);
+        // Queue pages are already authorised and ordered oldest first. Continue
+        // beyond unavailable/self-review rows so the primary action is eligible.
+        var pending = new List<ProgressAssignment>();
+        ReviewQueuePage? page;
+        var number = 1;
+        do
         {
-            return Challenge();
-        }
-
-        Cohorts = await _queryService.GetMyCohortsAsync(userId);
-
+            page = await learning.GetQueueAsync(actor, new(CycleId: overview.SelectedCycle, Page: number++));
+            if (page is null) return NotFound();
+            pending.AddRange(page.Rows.Where(r => r.CanReview));
+        } while (pending.Count < 6 && page.HasNextPage);
+        Pending = pending.Take(5).ToList();
+        MorePending = pending.Count > 5 || page.HasNextPage;
+        var changes = await learning.GetQueueAsync(actor, new(CycleId: overview.SelectedCycle, Status: "Changes requested"));
+        if (changes is null) return NotFound();
+        Changes = changes.Rows.Take(3).ToList();
         return Page();
     }
 }

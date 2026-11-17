@@ -1,67 +1,15 @@
 @page
 @model CandidateProgressTracker.Web.Pages.Admin.Users.CreateModel
-@{
-    ViewData["Title"] = "Create user account";
-}
-
-<h1>Create user account</h1>
-
-<div class="row">
-    <div class="col-md-6">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly"
-                 class="text-danger" role="alert"></div>
-
-            <div class="mb-3">
-                <label asp-for="Input.UserName" class="form-label"></label>
-                <input asp-for="Input.UserName" class="form-control"
-                       autocomplete="off" />
-                <span asp-validation-for="Input.UserName"
-                      class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Input.Role" class="form-label"></label>
-                <select asp-for="Input.Role" class="form-select">
-                    <option value="">Select a role</option>
-                    <option value="Candidate">Candidate</option>
-                    <option value="Mentor">Mentor</option>
-                </select>
-                <span asp-validation-for="Input.Role"
-                      class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Input.Password" class="form-label"></label>
-                <input asp-for="Input.Password" class="form-control"
-                       autocomplete="new-password" />
-                <div class="form-text">
-                    Use at least 12 characters, including uppercase,
-                    lowercase, a digit and a symbol.
-                </div>
-                <span asp-validation-for="Input.Password"
-                      class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Input.ConfirmPassword"
-                       class="form-label"></label>
-                <input asp-for="Input.ConfirmPassword" class="form-control"
-                       autocomplete="new-password" />
-                <span asp-validation-for="Input.ConfirmPassword"
-                      class="text-danger"></span>
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                Create account
-            </button>
-            <a asp-page="./Index" class="btn btn-outline-secondary">
-                Cancel
-            </a>
-        </form>
-    </div>
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<h1>Create account</h1>
+@if(Model.Receipt is {} receipt){
+    <partial name="_CredentialReceipt" model="receipt" />
+    <a asp-page="./Index">Accounts</a>
+}else{
+<form class="workspace-panel management-form" method="post">
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<label asp-for="Input.UserName">Username</label><input asp-for="Input.UserName" autocomplete="off" />
+<label asp-for="Input.Email">Email</label><input asp-for="Input.Email" />
+<label asp-for="Input.Role">Role</label><select asp-for="Input.Role"><option>Candidate</option><option>Mentor</option><option>Administrator</option></select>
+<button type="submit">Create account and activation code</button>
+</form>
 }

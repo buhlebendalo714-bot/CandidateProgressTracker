@@ -1,0 +1,15 @@
+@page
+@model CandidateProgressTracker.Web.Pages.Candidate.CoursesModel
+<h1>My courses and certificates</h1>
+@if (Model.Courses.Count == 0) { <p>No course assignments are available.</p> }
+@foreach (var course in Model.Courses)
+{
+    <section class="card p-3 my-3">
+        <h2 class="h5">@course.Title</h2>
+        <p>@course.Platform. Due @course.DueAt.ToOffset(TimeSpan.FromHours(2)).ToString("yyyy-MM-dd HH:mm") SAST</p>
+        <div class="workspace-actions"><a href="@course.Url" rel="noopener noreferrer">Open external course</a>
+        <a asp-page="./Submit" asp-route-assignmentId="@course.AssignmentId">Requirements and certificate submission</a>
+        <a asp-page="./SubmissionHistory" asp-route-assignmentId="@course.AssignmentId">Submission history and feedback</a>
+        </div>
+    </section>
+}

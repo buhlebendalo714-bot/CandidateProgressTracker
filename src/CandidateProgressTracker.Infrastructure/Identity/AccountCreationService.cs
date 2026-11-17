@@ -1,6 +1,8 @@
+using System.Data;
 using CandidateProgressTracker.Application.Accounts;
 using CandidateProgressTracker.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace CandidateProgressTracker.Infrastructure.Identity;
 
@@ -20,7 +22,8 @@ public class AccountCreationService : IAccountCreationService
     public async Task<AccountCreationResult> CreateAsync(
         string userName,
         string password,
-        string role)
+        string role,
+        string actorUserId)
     {
         var errors = new List<string>();
 
@@ -53,7 +56,10 @@ public class AccountCreationService : IAccountCreationService
         };
 
         await using var transaction =
-            await _db.Database.BeginTransactionAsync();
+            await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
+        if (!await AdministratorAccess.IsCurrentAsync(_db, actorUserId))
+            return new(false, new[] { "Current Administrator access is required." });
 
         var createResult =
             await _userManager.CreateAsync(user, password);
@@ -79,6 +85,12 @@ public class AccountCreationService : IAccountCreationService
                     .ToArray());
         }
 
+        // Compatibility contract creates a pending account, never an active
+        // administrator-chosen-password bypass. The UI uses CreateAsync on the
+        // lifecycle service with a unique email and administrator-issued activation.
+        _db.AccountAccessStates.Add(new() { UserId=user.Id,Enabled=false,
+            ChangedBy=actorUserId,ChangedAt=DateTimeOffset.UtcNow,Reason="Activation required" });
+        await _db.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return new AccountCreationResult(

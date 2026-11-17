@@ -11,6 +11,7 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
     {
         builder.ToTable("Assignments", table =>
         {
+            table.UseSqlOutputClause(false);
             table.HasCheckConstraint(
                 "CK_Assignments_ExactlyOneOwner",
                 """
@@ -28,6 +29,9 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
         });
 
         builder.HasKey(assignment => assignment.AssignmentId);
+        builder.ToTable("Assignments", t => t.HasCheckConstraint("CK_Assignments_Target", "([OfferingId] IS NULL AND [ProjectId] IS NOT NULL AND [MilestoneId] IS NOT NULL) OR ([OfferingId] IS NOT NULL AND [ProjectId] IS NULL AND [MilestoneId] IS NULL AND [CandidateId] IS NOT NULL AND [TeamId] IS NULL)"));
+        builder.HasOne<CourseOffering>().WithMany().HasForeignKey(a => new { a.OfferingId, a.CycleId }).HasPrincipalKey(o => new { o.OfferingId, o.CycleId }).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(a => new { a.OfferingId, a.CandidateId }).IsUnique().HasFilter("[OfferingId] IS NOT NULL");
 
         builder.Property(assignment => assignment.CandidateId)
             .HasMaxLength(450);
@@ -52,7 +56,7 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
             assignment.CandidateId
         })
         .IsUnique()
-        .HasFilter("[CandidateId] IS NOT NULL");
+        .HasFilter("[CandidateId] IS NOT NULL AND [MilestoneId] IS NOT NULL");
 
         // One assignment per milestone and team owner.
         builder.HasIndex(assignment => new

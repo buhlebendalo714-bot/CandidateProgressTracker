@@ -48,7 +48,7 @@ public class MilestoneAssignmentService : IMilestoneAssignmentService
         var user = await _users.FindByIdAsync(actorId);
 
         return user is not null &&
-            await _users.IsInRoleAsync(user, "Administrator");
+            (await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, user.Id) && await _users.IsInRoleAsync(user, "Administrator"));
     }
 
     private Task<Target?> GetTargetAsync(Guid milestoneId)
@@ -108,7 +108,7 @@ public class MilestoneAssignmentService : IMilestoneAssignmentService
                 from userRole in _db.UserRoles
                 join role in _db.Roles
                     on userRole.RoleId equals role.Id
-                where role.NormalizedName == "CANDIDATE"
+                where role.NormalizedName == "CANDIDATE" && !_db.AccountAccessStates.Any(s => s.UserId == userRole.UserId && !s.Enabled)
                 select userRole.UserId;
 
             candidates = await _db.Users
@@ -246,7 +246,7 @@ public class MilestoneAssignmentService : IMilestoneAssignmentService
             var candidate = await _users.FindByIdAsync(ownerId!);
 
             if (candidate is null ||
-                !await _users.IsInRoleAsync(candidate, "Candidate"))
+                !(await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, candidate.Id) && await _users.IsInRoleAsync(candidate, "Candidate")))
             {
                 return Failure("The selected user must have the Candidate role.");
             }

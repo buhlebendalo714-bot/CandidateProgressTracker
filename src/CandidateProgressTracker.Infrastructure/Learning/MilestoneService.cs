@@ -31,7 +31,7 @@ public class MilestoneService : IMilestoneService
         var user = await _users.FindByIdAsync(actorUserId);
 
         return user is not null &&
-            await _users.IsInRoleAsync(user, "Administrator");
+            (await CandidateProgressTracker.Infrastructure.Identity.AccountAvailability.IsActiveAsync(_db, user.Id) && await _users.IsInRoleAsync(user, "Administrator"));
     }
 
     public async Task<ProjectMilestones?> GetForProjectAsync(

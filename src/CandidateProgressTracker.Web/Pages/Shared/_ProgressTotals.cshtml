@@ -1,0 +1,4 @@
+@model CandidateProgressTracker.Application.Learning.ProgressTotals
+@if(Model.Required==0) { <p>No assignments</p> }
+else { <p>@Model.Approved / @Model.Required approved (@Model.Percentage!.Value.ToString("0.0")%)</p> }
+<p>Awaiting review: @Model.Pending. Changes requested: @Model.ChangesRequested. Overdue action items: @Model.Overdue.</p>
